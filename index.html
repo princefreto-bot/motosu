@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motosu Agencies</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- CinetPay SDK -->
+    <script src="https://cdn.cinetpay.com/seamless/main.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .balance-box { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+        .gains-box { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .hidden { display: none !important; }
+        .video-item { transition: transform 0.2s; }
+        .video-item:hover { transform: scale(1.02); }
+        .nav-active { border-bottom: 3px solid #2563eb; background-color: #eff6ff; }
+        .toast { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .cinetpay-btn {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            transition: all 0.3s ease;
+        }
+        .cinetpay-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(247, 147, 30, 0.4);
+        }
+        .action-btn-liked { background-color: #dc2626 !important; }
+        .action-btn-commented { background-color: #7c3aed !important; }
+        .bonus-badge {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden">
+        <div class="toast px-6 py-3 rounded-lg shadow-lg text-white font-medium"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-600">Motosu Agencies</h1>
+            <div id="headerButtons">
+                <button onclick="showSection('login')" class="text-sm px-3 py-1 text-blue-600 hover:bg-blue-50 rounded">Connexion</button>
+                <button onclick="showSection('register')" class="text-sm px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Inscription</button>
+            </div>
+            <div id="userHeaderButtons" class="hidden flex items-center gap-2">
+                <span id="userNameHeader" class="text-sm text-gray-600"></span>
+                <button onclick="logout()" class="text-sm px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Déconnexion</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+        <!-- Login Section -->
+        <section id="loginSection" class="max-w-md mx-auto">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-center mb-6">Connexion</h2>
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="loginEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                        <input type="password" id="loginPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium">Se connecter</button>
+                </form>
+                <p class="text-center mt-4 text-sm text-gray-600">Pas de compte? <a href="#" onclick="showSection('register')" class="text-blue-600 hover:underline">S'inscrire</a></p>
+            </div>
+        </section>
+
+        <!-- Register Section -->
+        <section id="registerSection" class="max-w-md mx-auto hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold text-center mb-6">Inscription</h2>
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
+                        <input type="text" id="regName" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                        <input type="email" id="regEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
+                        <input type="tel" id="regPhone" required placeholder="+237 6XX XXX XXX" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
+                        <input type="password" id="regPassword" required minlength="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Code de parrainage (optionnel)</label>
+                        <input type="text" id="regReferral" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium">S'inscrire</button>
+                </form>
+                <p class="text-center mt-4 text-sm text-gray-600">Déjà inscrit? <a href="#" onclick="showSection('login')" class="text-blue-600 hover:underline">Se connecter</a></p>
+            </div>
+        </section>
+
+        <!-- Pending Account Section -->
+        <section id="pendingSection" class="max-w-md mx-auto hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Compte en attente</h2>
+                <p class="text-gray-600 mb-4">Votre compte est en cours de validation.</p>
+                
+                <!-- CinetPay Payment Section -->
+                <div class="bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg p-5 mb-4">
+                    <div class="flex items-center justify-center gap-2 mb-3">
+                        <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        <h3 class="font-bold text-orange-800 text-lg">Activation rapide</h3>
+                    </div>
+                    <p class="text-orange-700 text-sm mb-4">Payez <strong class="text-xl">4 000 FCFA</strong> via Mobile Money pour activer instantanément votre compte.</p>
+                    <button onclick="payWithCinetPay()" id="cinetpayBtn" class="cinetpay-btn w-full py-3 px-6 text-white font-bold rounded-lg text-lg flex items-center justify-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                        </svg>
+                        Payer avec Mobile Money (CinetPay)
+                    </button>
+                    <p class="text-xs text-orange-600 mt-2">Orange Money, MTN Mobile Money, Moov Money...</p>
+                    
+                    <!-- Note importante pour localhost -->
+                    <div id="localhostWarning" class="mt-3 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs text-yellow-800 hidden">
+                        <strong>⚠️ Mode Test:</strong> CinetPay ne fonctionne pas sur localhost. 
+                        Déployez le site sur un serveur avec HTTPS ou utilisez la simulation.
+                    </div>
+                </div>
+
+                <div class="relative my-4">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">ou</span>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left">
+                    <h3 class="font-semibold text-yellow-800 mb-2">Compte de recharge</h3>
+                    <p class="text-yellow-700 text-sm mb-2"><strong>Compte inactif</strong></p>
+                    <p class="text-yellow-700 text-sm">Veuillez vous abonner pour accéder à votre compte.</p>
+                    <p class="text-yellow-700 text-sm mt-2">Veuillez suivre la procédure de dépôt. Assurez-vous d'utiliser le numéro <strong id="pendingPhone"></strong> pour effectuer le dépôt.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rejected Account Section -->
+        <section id="rejectedSection" class="max-w-md mx-auto hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Compte refusé</h2>
+                <p class="text-gray-600">Votre demande d'inscription a été refusée. Veuillez contacter le support.</p>
+            </div>
+        </section>
+
+        <!-- Dashboard Section -->
+        <section id="dashboardSection" class="hidden">
+            <!-- Dashboard Navigation -->
+            <nav class="bg-white rounded-lg shadow-md mb-6 overflow-x-auto">
+                <div class="flex">
+                    <button onclick="showDashTab('overview')" id="tabOverview" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 nav-active whitespace-nowrap">Aperçu</button>
+                    <button onclick="showDashTab('videos')" id="tabVideos" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap">Vidéos</button>
+                    <button onclick="showDashTab('referral')" id="tabReferral" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap">Megatrend</button>
+                    <button onclick="showDashTab('withdraw')" id="tabWithdraw" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap">Retrait</button>
+                </div>
+            </nav>
+
+            <!-- Overview Tab -->
+            <div id="overviewTab">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <!-- Balance Box -->
+                    <div class="balance-box rounded-lg p-6 text-white">
+                        <h3 class="text-sm font-medium opacity-90 mb-1">Solde Mis</h3>
+                        <p class="text-3xl font-bold">4 000 FCFA</p>
+                        <p class="text-xs opacity-75 mt-2">Montant fixe de départ</p>
+                    </div>
+                    <!-- Gains Box -->
+                    <div class="gains-box rounded-lg p-6 text-white">
+                        <h3 class="text-sm font-medium opacity-90 mb-1">Gains Accumulés</h3>
+                        <p class="text-3xl font-bold" id="totalGains">0 FCFA</p>
+                        <p class="text-xs opacity-75 mt-2">Parrainages + Vidéos + Bonus</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Gains Parrainage</h4>
+                        <p class="text-xl font-bold text-gray-800" id="referralGains">0 FCFA</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Gains Vidéos</h4>
+                        <p class="text-xl font-bold text-gray-800" id="videoGains">0 FCFA</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Bonus Actions</h4>
+                        <p class="text-xl font-bold text-purple-600" id="bonusGains">0 FCFA</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Filleuls Actifs</h4>
+                        <p class="text-xl font-bold text-gray-800" id="referralCount">0</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg p-4 shadow-sm">
+                    <h4 class="text-sm font-medium text-gray-500 mb-2">Temps de visionnage total</h4>
+                    <p class="text-lg font-semibold text-gray-800" id="watchTime">0 minutes</p>
+                </div>
+            </div>
+
+            <!-- Videos Tab -->
+            <div id="videosTab" class="hidden">
+                <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+                    <h3 class="text-lg font-semibold mb-2">Activités Vidéo</h3>
+                    <p class="text-sm text-gray-600 mb-4">Regardez les vidéos, likez et commentez pour gagner des bonus!</p>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-green-50 rounded p-2">
+                            <p class="text-xs text-green-600 font-medium">Visionnage</p>
+                            <p class="text-sm font-bold text-green-700">+5 FCFA/min</p>
+                        </div>
+                        <div class="bg-red-50 rounded p-2">
+                            <p class="text-xs text-red-600 font-medium">Like</p>
+                            <p class="text-sm font-bold text-red-700">+25 FCFA</p>
+                        </div>
+                        <div class="bg-purple-50 rounded p-2">
+                            <p class="text-xs text-purple-600 font-medium">Commentaire</p>
+                            <p class="text-sm font-bold text-purple-700">+50 FCFA</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="videoList" class="space-y-4">
+                    <!-- Videos loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Referral Tab -->
+            <div id="referralTab" class="hidden">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Programme Megatrend</h3>
+                    <p class="text-sm text-gray-600 mb-6">Parrainez vos amis et gagnez des commissions sur 3 niveaux!</p>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h4 class="text-sm font-medium text-blue-800 mb-2">Votre code de parrainage</h4>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="referralCode" readonly class="flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-center font-mono font-bold text-blue-600">
+                            <button onclick="copyReferralCode()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">Copier</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                        <h4 class="text-sm font-medium text-gray-800 mb-2">Votre lien de parrainage</h4>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="referralLink" readonly class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-xs">
+                            <button onclick="copyReferralLink()" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm">Copier</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-sm font-medium text-gray-800">Commissions par niveau</h4>
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded">
+                            <span class="text-sm">Niveau 1 (direct)</span>
+                            <span class="font-bold text-green-600">500 FCFA</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-yellow-50 rounded">
+                            <span class="text-sm">Niveau 2</span>
+                            <span class="font-bold text-yellow-600">200 FCFA</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-orange-50 rounded">
+                            <span class="text-sm">Niveau 3</span>
+                            <span class="font-bold text-orange-600">100 FCFA</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <h4 class="text-sm font-medium text-gray-800 mb-3">Vos filleuls</h4>
+                        <div id="referralsList" class="space-y-2">
+                            <p class="text-sm text-gray-500 text-center py-4">Aucun filleul pour le moment</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Withdraw Tab -->
+            <div id="withdrawTab" class="hidden">
+                <div class="bg-white rounded-lg shadow-md p-6 mb-4">
+                    <h3 class="text-lg font-semibold mb-4">Demande de Retrait</h3>
+                    <p class="text-sm text-gray-600 mb-4">Choisissez votre méthode de retrait préférée.</p>
+
+                    <div class="flex gap-2 mb-4">
+                        <button onclick="setWithdrawMethod('direct')" id="btnDirect" class="flex-1 py-2 px-4 bg-blue-600 text-white rounded font-medium">Retrait Direct</button>
+                        <button onclick="setWithdrawMethod('crypto')" id="btnCrypto" class="flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded font-medium">Retrait Crypto</button>
+                    </div>
+
+                    <!-- Minimum amounts info -->
+                    <div id="withdrawMinInfo" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p class="text-sm text-blue-800">
+                            <strong>Minimum Mobile Money:</strong> 1 000 FCFA
+                        </p>
+                    </div>
+
+                    <form id="withdrawForm" onsubmit="handleWithdraw(event)">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Montant à retirer (FCFA)</label>
+                            <input type="number" id="withdrawAmount" required min="1000" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <p id="withdrawMinText" class="text-xs text-gray-500 mt-1">Minimum: 1 000 FCFA (Mobile Money)</p>
+                        </div>
+
+                        <div id="cryptoFields" class="hidden mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Adresse Crypto (USDT TRC20)</label>
+                            <input type="text" id="cryptoAddress" placeholder="TXxxxxxxxxxxxxxxxxxxxxxxxxxx" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Capture d'écran du tableau de bord</label>
+                            <input type="file" id="screenshot" accept="image/*" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+
+                        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 font-medium">Soumettre la demande</button>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h4 class="text-sm font-medium text-gray-800 mb-3">Historique des retraits</h4>
+                    <div id="withdrawHistory" class="space-y-2">
+                        <p class="text-sm text-gray-500 text-center py-4">Aucune demande de retrait</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Section -->
+        <section id="adminSection" class="hidden">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg p-4 mb-6">
+                <h2 class="text-xl font-bold">Panel Administrateur</h2>
+                <p class="text-sm opacity-90">Gestion complète de la plateforme</p>
+            </div>
+
+            <nav class="bg-white rounded-lg shadow-md mb-6 overflow-x-auto">
+                <div class="flex">
+                    <button onclick="showAdminTab('pending')" id="adminTabPending" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 nav-active whitespace-nowrap">En attente</button>
+                    <button onclick="showAdminTab('users')" id="adminTabUsers" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap">Utilisateurs</button>
+                    <button onclick="showAdminTab('withdrawals')" id="adminTabWithdrawals" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap">Retraits</button>
+                    <button onclick="showAdminTab('videos')" id="adminTabVideos" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap">Vidéos</button>
+                    <button onclick="showAdminTab('payments')" id="adminTabPayments" class="flex-1 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 whitespace-nowrap">Paiements</button>
+                </div>
+            </nav>
+
+            <!-- Pending Users Tab -->
+            <div id="adminPendingTab">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h3 class="text-lg font-semibold mb-4">Comptes en attente de validation</h3>
+                    <div id="pendingUsersList" class="space-y-3">
+                        <p class="text-sm text-gray-500 text-center py-4">Aucun compte en attente</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Users Tab -->
+            <div id="adminUsersTab" class="hidden">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h3 class="text-lg font-semibold mb-4">Tous les utilisateurs</h3>
+                    <div id="allUsersList" class="space-y-3">
+                        <p class="text-sm text-gray-500 text-center py-4">Aucun utilisateur</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Withdrawals Tab -->
+            <div id="adminWithdrawalsTab" class="hidden">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h3 class="text-lg font-semibold mb-4">Demandes de retrait</h3>
+                    <div id="withdrawalsList" class="space-y-3">
+                        <p class="text-sm text-gray-500 text-center py-4">Aucune demande de retrait</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Videos Management Tab -->
+            <div id="adminVideosTab" class="hidden">
+                <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+                    <h3 class="text-lg font-semibold mb-4">Ajouter une vidéo</h3>
+                    <form id="addVideoForm" onsubmit="handleAddVideo(event)">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Titre</label>
+                            <input type="text" id="videoTitle" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">URL (YouTube ou TikTok)</label>
+                            <input type="url" id="videoUrl" required placeholder="https://www.youtube.com/watch?v=..." class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Plateforme</label>
+                            <select id="videoPlatform" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                <option value="youtube">YouTube</option>
+                                <option value="tiktok">TikTok</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">Ajouter la vidéo</button>
+                    </form>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h4 class="text-sm font-medium text-gray-800 mb-3">Vidéos actuelles</h4>
+                    <div id="adminVideosList" class="space-y-2">
+                        <p class="text-sm text-gray-500 text-center py-4">Aucune vidéo</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payments Tab -->
+            <div id="adminPaymentsTab" class="hidden">
+                <div class="bg-white rounded-lg shadow-md p-4">
+                    <h3 class="text-lg font-semibold mb-4">Historique des paiements CinetPay</h3>
+                    <div id="paymentsList" class="space-y-3">
+                        <p class="text-sm text-gray-500 text-center py-4">Aucun paiement enregistré</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- About Section -->
+    <section class="bg-gray-800 text-white py-12 mt-12">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-2xl font-bold mb-6 text-center">À propos de Motosu Agencies</h2>
+            <div class="space-y-4 text-gray-300 text-sm leading-relaxed">
+                <p>Motosu Agencies est une plateforme innovante dédiée à l'accompagnement des jeunes entrepreneurs et professionnels francophones en Afrique. Notre mission est de créer un environnement sécurisé et accessible où chacun peut développer son réseau, apprendre à travers des contenus interactifs et bénéficier d'opportunités de croissance progressive.</p>
+                <p>Nous croyons à l'importance de l'engagement et de la persévérance : chaque action sur notre plateforme, qu'il s'agisse de participer à nos activités vidéo, parrainer de nouveaux membres ou retirer ses gains, contribue à la progression personnelle et professionnelle de nos utilisateurs.</p>
+                <p>Notre équipe, basée en Afrique et en Europe, veille à ce que l'expérience utilisateur soit simple, sécurisée et adaptée aux besoins d'une communauté mobile-first. Motosu Agencies s'engage à offrir un environnement fiable et motivant pour accompagner chacun dans son parcours.</p>
+                <p class="text-white font-medium">Rejoignez-nous et découvrez comment votre engagement peut vous permettre de progresser, tout en restant connecté à une communauté dynamique et francophone.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 py-6">
+        <div class="max-w-4xl mx-auto px-4 text-center text-sm">
+            <p>&copy; 2024 Motosu Agencies. Tous droits réservés.</p>
+            <p class="mt-2 text-xs text-gray-500">Version standalone - Données stockées localement</p>
+        </div>
+    </footer>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="modalVideoTitle" class="font-semibold"></h3>
+                <button onclick="closeVideoModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4">
+                <div id="videoContainer" class="aspect-video bg-gray-100 rounded mb-4"></div>
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Temps visionné: <span id="currentWatchTime" class="font-bold">0</span>s</p>
+                        <p class="text-sm text-green-600">Gains visionnage: +<span id="currentVideoGains" class="font-bold">0</span> FCFA</p>
+                    </div>
+                    <a id="externalVideoLink" href="#" target="_blank" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Ouvrir sur la plateforme</a>
+                </div>
+                
+                <!-- Like & Comment Actions -->
+                <div class="border-t pt-4">
+                    <p class="text-sm font-medium text-gray-700 mb-3">Actions bonus (après avoir regardé la vidéo sur la plateforme) :</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="likeBtn" onclick="handleVideoLike()" class="flex items-center justify-center gap-2 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                            <span>J'ai liké (+25 FCFA)</span>
+                        </button>
+                        <button id="commentBtn" onclick="handleVideoComment()" class="flex items-center justify-center gap-2 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-all">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/>
+                            </svg>
+                            <span>J'ai commenté (+50 FCFA)</span>
+                        </button>
+                    </div>
+                    <p id="actionFeedback" class="text-xs text-center mt-2 text-gray-500"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div id="screenshotModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-auto">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 class="font-semibold">Capture d'écran</h3>
+                <button onclick="closeScreenshotModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4">
+                <img id="screenshotImage" src="" alt="Screenshot" class="w-full rounded">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // DATABASE - LocalStorage based
+        // ============================================================
+        const DB_KEYS = {
+            users: 'motosu_users',
+            videos: 'motosu_videos',
+            withdrawals: 'motosu_withdrawals',
+            referrals: 'motosu_referrals',
+            currentUser: 'motosu_current_user',
+            videoActions: 'motosu_video_actions',
+            payments: 'motosu_payments'
+        };
+
+        // Commission rates by level
+        const COMMISSION_RATES = { 1: 500, 2: 200, 3: 100 };
+        const VIDEO_RATE = 5; // 5 FCFA per minute
+        const LIKE_BONUS = 25; // 25 FCFA per like
+        const COMMENT_BONUS = 50; // 50 FCFA per comment
+        const SUBSCRIPTION_AMOUNT = 4000; // CinetPay subscription amount
+
+        // Withdrawal minimums
+        const MIN_WITHDRAW_DIRECT = 1000; // Mobile Money minimum
+        const MIN_WITHDRAW_CRYPTO = 10000; // Crypto minimum
+
+        // CinetPay Configuration - Vos identifiants réels
+        const CINETPAY_CONFIG = {
+            apikey: '1998578076686c3f77308a92.08703757', // Votre vraie API Key
+            site_id: '105901112', // Votre Site ID
+            notify_url: '', // URL de notification (optionnel)
+            mode: 'PRODUCTION' // Mode PRODUCTION
+        };
+
+        // Variable pour suivre l'état de CinetPay
+        let cinetPayReady = false;
+        let cinetPayError = null;
+
+        // Vérifier si CinetPay est chargé
+        function checkCinetPay() {
+            if (typeof CinetPay !== 'undefined') {
+                cinetPayReady = true;
+                console.log('✅ CinetPay SDK chargé avec succès');
+            } else {
+                cinetPayError = 'SDK non chargé';
+                console.warn('⚠️ CinetPay SDK non disponible');
+            }
+        }
+
+        // Appeler après le chargement de la page
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                checkCinetPay();
+                
+                // Afficher l'avertissement si on est sur localhost
+                if (window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1' ||
+                    window.location.protocol === 'file:') {
+                    const warning = document.getElementById('localhostWarning');
+                    if (warning) {
+                        warning.classList.remove('hidden');
+                    }
+                    console.warn('⚠️ CinetPay ne fonctionne pas correctement sur localhost. Utilisez un domaine HTTPS en production.');
+                }
+            }, 1000);
+        });
+
+        // Initialize database with default data
+        function initDB() {
+            if (!localStorage.getItem(DB_KEYS.users)) {
+                const adminUser = {
+                    id: 'admin001',
+                    name: 'Administrateur',
+                    email: 'admin@motosu.com',
+                    phone: '+237600000000',
+                    password: hashPassword('admin123'),
+                    status: 'validated',
+                    isAdmin: true,
+                    referralCode: 'MOTADMIN',
+                    referredBy: null,
+                    referralGains: 0,
+                    videoGains: 0,
+                    bonusGains: 0,
+                    watchTime: 0,
+                    createdAt: new Date().toISOString()
+                };
+                localStorage.setItem(DB_KEYS.users, JSON.stringify([adminUser]));
+            }
+
+            if (!localStorage.getItem(DB_KEYS.videos)) {
+                const defaultVideos = [
+                    {
+                        id: 'vid001',
+                        title: 'Comment réussir en ligne - Introduction',
+                        url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                        platform: 'youtube',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 'vid002',
+                        title: 'Les secrets du marketing digital',
+                        url: 'https://www.youtube.com/watch?v=jNQXAC9IVRw',
+                        platform: 'youtube',
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                localStorage.setItem(DB_KEYS.videos, JSON.stringify(defaultVideos));
+            }
+
+            if (!localStorage.getItem(DB_KEYS.withdrawals)) {
+                localStorage.setItem(DB_KEYS.withdrawals, JSON.stringify([]));
+            }
+
+            if (!localStorage.getItem(DB_KEYS.referrals)) {
+                localStorage.setItem(DB_KEYS.referrals, JSON.stringify([]));
+            }
+
+            if (!localStorage.getItem(DB_KEYS.videoActions)) {
+                localStorage.setItem(DB_KEYS.videoActions, JSON.stringify([]));
+            }
+
+            if (!localStorage.getItem(DB_KEYS.payments)) {
+                localStorage.setItem(DB_KEYS.payments, JSON.stringify([]));
+            }
+        }
+
+        // Database helpers
+        function getUsers() {
+            return JSON.parse(localStorage.getItem(DB_KEYS.users) || '[]');
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem(DB_KEYS.users, JSON.stringify(users));
+        }
+
+        function getVideos() {
+            return JSON.parse(localStorage.getItem(DB_KEYS.videos) || '[]');
+        }
+
+        function saveVideos(videos) {
+            localStorage.setItem(DB_KEYS.videos, JSON.stringify(videos));
+        }
+
+        function getWithdrawals() {
+            return JSON.parse(localStorage.getItem(DB_KEYS.withdrawals) || '[]');
+        }
+
+        function saveWithdrawals(withdrawals) {
+            localStorage.setItem(DB_KEYS.withdrawals, JSON.stringify(withdrawals));
+        }
+
+        function getReferrals() {
+            return JSON.parse(localStorage.getItem(DB_KEYS.referrals) || '[]');
+        }
+
+        function saveReferrals(referrals) {
+            localStorage.setItem(DB_KEYS.referrals, JSON.stringify(referrals));
+        }
+
+        function getVideoActions() {
+            return JSON.parse(localStorage.getItem(DB_KEYS.videoActions) || '[]');
+        }
+
+        function saveVideoActions(actions) {
+            localStorage.setItem(DB_KEYS.videoActions, JSON.stringify(actions));
+        }
+
+        function getPayments() {
+            return JSON.parse(localStorage.getItem(DB_KEYS.payments) || '[]');
+        }
+
+        function savePayments(payments) {
+            localStorage.setItem(DB_KEYS.payments, JSON.stringify(payments));
+        }
+
+        // Simple hash function (for demo purposes)
+        function hashPassword(password) {
+            let hash = 0;
+            for (let i = 0; i < password.length; i++) {
+                const char = password.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return 'hash_' + Math.abs(hash).toString(16);
+        }
+
+        function generateId() {
+            return 'id_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+        }
+
+        function generateReferralCode() {
+            return 'MOT' + Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+
+        function sanitize(str) {
+            if (typeof str !== 'string') return str;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        // UI STATE
+        // ============================================================
+        let currentUser = null;
+        let withdrawMethod = 'direct';
+        let videoWatchInterval = null;
+        let currentVideoId = null;
+        let watchedSeconds = 0;
+
+        // ============================================================
+        // TOAST NOTIFICATION
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const content = toast.querySelector('div');
+            
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                info: 'bg-blue-600',
+                warning: 'bg-yellow-600'
+            };
+
+            content.className = `toast px-6 py-3 rounded-lg shadow-lg text-white font-medium ${colors[type] || colors.info}`;
+            content.textContent = message;
+            
+            toast.classList.remove('hidden');
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // ============================================================
+        // CINETPAY INTEGRATION
+        // ============================================================
+        function payWithCinetPay() {
+            if (!currentUser) {
+                showToast('Veuillez vous connecter', 'error');
+                return;
+            }
+
+            // Générer un ID de transaction unique
+            const transactionId = 'MOTOSU' + Date.now();
+
+            // Vérifier si CinetPay SDK est chargé
+            if (typeof CinetPay === 'undefined') {
+                console.error('CinetPay SDK non chargé');
+                // Proposer le mode simulation pour les tests
+                if (confirm('CinetPay n\'est pas disponible (problème de connexion ou localhost).\n\nVoulez-vous simuler un paiement réussi pour tester?')) {
+                    showToast('Simulation du paiement...', 'info');
+                    setTimeout(() => {
+                        simulatePaymentSuccess(transactionId);
+                    }, 2000);
+                }
+                return;
+            }
+
+            try {
+                // Configuration CinetPay
+                CinetPay.setConfig({
+                    apikey: CINETPAY_CONFIG.apikey,
+                    site_id: CINETPAY_CONFIG.site_id,
+                    notify_url: CINETPAY_CONFIG.notify_url,
+                    mode: CINETPAY_CONFIG.mode
+                });
+
+                // Nettoyer le numéro de téléphone (enlever espaces et +)
+                let phoneNumber = currentUser.phone.replace(/\s+/g, '').replace(/^\+/, '');
+                
+                // Préparer les données de paiement
+                const paymentData = {
+                    transaction_id: transactionId,
+                    amount: SUBSCRIPTION_AMOUNT,
+                    currency: 'XAF',
+                    channels: 'ALL',
+                    description: 'Abonnement Motosu Agencies - 4000 FCFA',
+                    
+                    // Informations client
+                    customer_name: currentUser.name.split(' ')[0] || 'Client',
+                    customer_surname: currentUser.name.split(' ').slice(1).join(' ') || 'Motosu',
+                    customer_email: currentUser.email || 'client@motosu.com',
+                    customer_phone_number: phoneNumber,
+                    customer_address: 'Cameroun',
+                    customer_city: 'Douala',
+                    customer_country: 'CM',
+                    customer_state: 'LT',
+                    customer_zip_code: '00237'
+                };
+
+                console.log('📤 Envoi paiement CinetPay:', paymentData);
+
+                // Lancer le checkout
+                CinetPay.getCheckout(paymentData);
+
+                // Écouter la réponse
+                CinetPay.waitResponse(function(data) {
+                    console.log('📥 Réponse CinetPay:', data);
+                    
+                    if (data.status === "REFUSED") {
+                        showToast('Paiement refusé par CinetPay.', 'error');
+                    } else if (data.status === "ACCEPTED") {
+                        handlePaymentSuccess(transactionId, data);
+                    } else {
+                        console.log('Statut:', data.status);
+                    }
+                });
+
+                // Écouter les erreurs
+                CinetPay.onError(function(data) {
+                    console.error('❌ Erreur CinetPay:', data);
+                    
+                    let errorMessage = 'Erreur de paiement.';
+                    
+                    if (data && data.message) {
+                        errorMessage = data.message;
+                    } else if (typeof data === 'string') {
+                        errorMessage = data;
+                    }
+                    
+                    showToast(errorMessage + ' Veuillez réessayer.', 'error');
+                    
+                    // Proposer la simulation en cas d'erreur
+                    setTimeout(() => {
+                        if (confirm('Le paiement a échoué.\n\nCela peut être dû à:\n- Connexion depuis localhost (non autorisé en production)\n- Problème de réseau\n- Configuration du compte CinetPay\n\nVoulez-vous simuler un paiement réussi pour tester?')) {
+                            simulatePaymentSuccess(transactionId);
+                        }
+                    }, 500);
+                });
+
+            } catch (error) {
+                console.error('Exception CinetPay:', error);
+                showToast('Erreur technique. Veuillez réessayer.', 'error');
+                
+                // Proposer la simulation
+                if (confirm('Une erreur technique s\'est produite.\n\nVoulez-vous simuler un paiement réussi pour tester?')) {
+                    simulatePaymentSuccess(transactionId);
+                }
+            }
+        }
+
+        function simulatePaymentSuccess(transactionId) {
+            // For demo/testing when CinetPay SDK is not available
+            const paymentData = {
+                cpm_trans_id: transactionId,
+                cpm_amount: SUBSCRIPTION_AMOUNT,
+                cpm_currency: 'XAF',
+                cpm_payment_date: new Date().toISOString()
+            };
+            handlePaymentSuccess(transactionId, paymentData);
+        }
+
+        function handlePaymentSuccess(transactionId, data) {
+            // Save payment record
+            const payments = getPayments();
+            payments.push({
+                id: generateId(),
+                transactionId: transactionId,
+                userId: currentUser.id,
+                userName: currentUser.name,
+                userEmail: currentUser.email,
+                userPhone: currentUser.phone,
+                amount: SUBSCRIPTION_AMOUNT,
+                status: 'completed',
+                paymentData: data,
+                createdAt: new Date().toISOString()
+            });
+            savePayments(payments);
+
+            // Validate user account
+            const users = getUsers();
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            
+            if (userIndex !== -1) {
+                users[userIndex].status = 'validated';
+                users[userIndex].paidAt = new Date().toISOString();
+                users[userIndex].paymentTransactionId = transactionId;
+                
+                // Credit referral commissions
+                const referrals = getReferrals();
+                referrals.forEach(r => {
+                    if (r.referredId === currentUser.id && !r.credited) {
+                        const referrerIndex = users.findIndex(u => u.id === r.referrerId);
+                        if (referrerIndex !== -1 && users[referrerIndex].status === 'validated') {
+                            users[referrerIndex].referralGains += r.commission;
+                            r.credited = true;
+                        }
+                    }
+                });
+                
+                saveUsers(users);
+                saveReferrals(referrals);
+                
+                currentUser = users[userIndex];
+                localStorage.setItem(DB_KEYS.currentUser, JSON.stringify(currentUser));
+                
+                showToast('Paiement réussi! Votre compte est maintenant actif.', 'success');
+                
+                // Redirect to dashboard
+                setTimeout(() => {
+                    showSection('dashboard');
+                }, 1500);
+            }
+        }
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initDB();
+            
+            // Check for saved session
+            const savedUser = localStorage.getItem(DB_KEYS.currentUser);
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                // Refresh user data from DB
+                const users = getUsers();
+                const freshUser = users.find(u => u.id === currentUser.id);
+                if (freshUser) {
+                    currentUser = freshUser;
+                    localStorage.setItem(DB_KEYS.currentUser, JSON.stringify(currentUser));
+                    checkUserStatus();
+                } else {
+                    logout();
+                }
+            }
+
+            // Check for referral code in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode) {
+                document.getElementById('regReferral').value = refCode;
+                showSection('register');
+            }
+        });
+
+        // ============================================================
+        // SECTION MANAGEMENT
+        // ============================================================
+        function showSection(section) {
+            const sections = ['loginSection', 'registerSection', 'pendingSection', 'rejectedSection', 'dashboardSection', 'adminSection'];
+            sections.forEach(s => document.getElementById(s).classList.add('hidden'));
+
+            if (section === 'login') {
+                document.getElementById('loginSection').classList.remove('hidden');
+                document.getElementById('headerButtons').classList.remove('hidden');
+                document.getElementById('userHeaderButtons').classList.add('hidden');
+            } else if (section === 'register') {
+                document.getElementById('registerSection').classList.remove('hidden');
+                document.getElementById('headerButtons').classList.remove('hidden');
+                document.getElementById('userHeaderButtons').classList.add('hidden');
+            } else if (section === 'pending') {
+                document.getElementById('pendingSection').classList.remove('hidden');
+                document.getElementById('pendingPhone').textContent = currentUser.phone;
+                document.getElementById('headerButtons').classList.add('hidden');
+                document.getElementById('userHeaderButtons').classList.remove('hidden');
+                document.getElementById('userNameHeader').textContent = currentUser.name;
+            } else if (section === 'rejected') {
+                document.getElementById('rejectedSection').classList.remove('hidden');
+                document.getElementById('headerButtons').classList.add('hidden');
+                document.getElementById('userHeaderButtons').classList.remove('hidden');
+                document.getElementById('userNameHeader').textContent = currentUser.name;
+            } else if (section === 'dashboard') {
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                document.getElementById('headerButtons').classList.add('hidden');
+                document.getElementById('userHeaderButtons').classList.remove('hidden');
+                document.getElementById('userNameHeader').textContent = currentUser.name;
+                loadDashboard();
+            } else if (section === 'admin') {
+                document.getElementById('adminSection').classList.remove('hidden');
+                document.getElementById('headerButtons').classList.add('hidden');
+                document.getElementById('userHeaderButtons').classList.remove('hidden');
+                document.getElementById('userNameHeader').textContent = 'Admin';
+                loadAdminData();
+            }
+        }
+
+        function showDashTab(tab) {
+            const tabs = ['overview', 'videos', 'referral', 'withdraw'];
+            tabs.forEach(t => {
+                document.getElementById(t + 'Tab').classList.add('hidden');
+                document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('nav-active');
+            });
+            
+            document.getElementById(tab + 'Tab').classList.remove('hidden');
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
+            
+            if (tab === 'videos') loadVideos();
+            if (tab === 'referral') loadReferrals();
+            if (tab === 'withdraw') loadWithdrawHistory();
+        }
+
+        function showAdminTab(tab) {
+            const tabs = ['pending', 'users', 'withdrawals', 'videos', 'payments'];
+            tabs.forEach(t => {
+                document.getElementById('admin' + t.charAt(0).toUpperCase() + t.slice(1) + 'Tab').classList.add('hidden');
+                document.getElementById('adminTab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.remove('nav-active');
+            });
+            
+            document.getElementById('admin' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Tab').classList.remove('hidden');
+            document.getElementById('adminTab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('nav-active');
+            
+            if (tab === 'pending') loadPendingUsers();
+            if (tab === 'users') loadAllUsers();
+            if (tab === 'withdrawals') loadWithdrawals();
+            if (tab === 'videos') loadAdminVideos();
+            if (tab === 'payments') loadPayments();
+        }
+
+        // ============================================================
+        // AUTHENTICATION
+        // ============================================================
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.toLowerCase().trim();
+            const password = document.getElementById('loginPassword').value;
+
+            const users = getUsers();
+            const user = users.find(u => u.email.toLowerCase() === email && u.password === hashPassword(password));
+
+            if (!user) {
+                showToast('Email ou mot de passe incorrect', 'error');
+                return;
+            }
+
+            currentUser = user;
+            localStorage.setItem(DB_KEYS.currentUser, JSON.stringify(currentUser));
+            showToast('Connexion réussie!', 'success');
+            checkUserStatus();
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const name = sanitize(document.getElementById('regName').value.trim());
+            const email = sanitize(document.getElementById('regEmail').value.toLowerCase().trim());
+            const phone = sanitize(document.getElementById('regPhone').value.trim());
+            const password = document.getElementById('regPassword').value;
+            const referralCode = document.getElementById('regReferral').value.toUpperCase().trim();
+
+            const users = getUsers();
+
+            // Check if email exists
+            if (users.find(u => u.email.toLowerCase() === email)) {
+                showToast('Cet email est déjà utilisé', 'error');
+                return;
+            }
+
+            // Find referrer
+            let referredBy = null;
+            if (referralCode) {
+                const referrer = users.find(u => u.referralCode === referralCode);
+                if (referrer) {
+                    referredBy = referrer.id;
+                }
+            }
+
+            const newUser = {
+                id: generateId(),
+                name,
+                email,
+                phone,
+                password: hashPassword(password),
+                status: 'pending',
+                isAdmin: false,
+                referralCode: generateReferralCode(),
+                referredBy,
+                referralGains: 0,
+                videoGains: 0,
+                bonusGains: 0,
+                watchTime: 0,
+                createdAt: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            saveUsers(users);
+
+            // Create referral records (up to 3 levels)
+            if (referredBy) {
+                const referrals = getReferrals();
+                let currentReferrer = referredBy;
+                
+                for (let level = 1; level <= 3 && currentReferrer; level++) {
+                    referrals.push({
+                        id: generateId(),
+                        referrerId: currentReferrer,
+                        referredId: newUser.id,
+                        level,
+                        commission: COMMISSION_RATES[level],
+                        credited: false,
+                        createdAt: new Date().toISOString()
+                    });
+
+                    const referrerUser = users.find(u => u.id === currentReferrer);
+                    currentReferrer = referrerUser ? referrerUser.referredBy : null;
+                }
+                
+                saveReferrals(referrals);
+            }
+
+            currentUser = newUser;
+            localStorage.setItem(DB_KEYS.currentUser, JSON.stringify(currentUser));
+            showToast('Inscription réussie! En attente de validation.', 'success');
+            showSection('pending');
+        }
+
+        function checkUserStatus() {
+            if (!currentUser) {
+                showSection('login');
+                return;
+            }
+
+            // Refresh user data
+            const users = getUsers();
+            const freshUser = users.find(u => u.id === currentUser.id);
+            if (freshUser) {
+                currentUser = freshUser;
+                localStorage.setItem(DB_KEYS.currentUser, JSON.stringify(currentUser));
+            }
+
+            if (currentUser.isAdmin) {
+                showSection('admin');
+            } else if (currentUser.status === 'validated') {
+                showSection('dashboard');
+            } else if (currentUser.status === 'rejected') {
+                showSection('rejected');
+            } else {
+                showSection('pending');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem(DB_KEYS.currentUser);
+            currentUser = null;
+            showToast('Déconnexion réussie', 'info');
+            showSection('login');
+        }
+
+        // ============================================================
+        // DASHBOARD
+        // ============================================================
+        function loadDashboard() {
+            // Refresh user data
+            const users = getUsers();
+            const freshUser = users.find(u => u.id === currentUser.id);
+            if (freshUser) {
+                currentUser = freshUser;
+            }
+
+            const referrals = getReferrals();
+            const directReferrals = referrals.filter(r => r.referrerId === currentUser.id && r.level === 1);
+            const validatedReferrals = directReferrals.filter(r => {
+                const referred = users.find(u => u.id === r.referredId);
+                return referred && referred.status === 'validated';
+            });
+
+            const bonusGains = currentUser.bonusGains || 0;
+            const totalGains = currentUser.referralGains + currentUser.videoGains + bonusGains;
+
+            document.getElementById('totalGains').textContent = totalGains.toLocaleString() + ' FCFA';
+            document.getElementById('referralGains').textContent = currentUser.referralGains.toLocaleString() + ' FCFA';
+            document.getElementById('videoGains').textContent = currentUser.videoGains.toLocaleString() + ' FCFA';
+            document.getElementById('bonusGains').textContent = bonusGains.toLocaleString() + ' FCFA';
+            document.getElementById('referralCount').textContent = validatedReferrals.length;
+            document.getElementById('watchTime').textContent = Math.floor(currentUser.watchTime / 60) + ' minutes';
+            document.getElementById('referralCode').value = currentUser.referralCode;
+            document.getElementById('referralLink').value = window.location.origin + window.location.pathname + '?ref=' + currentUser.referralCode;
+        }
+
+        // ============================================================
+        // VIDEOS
+        // ============================================================
+        function loadVideos() {
+            const videos = getVideos();
+            const actions = getVideoActions();
+            const container = document.getElementById('videoList');
+
+            if (videos.length > 0) {
+                container.innerHTML = videos.map(v => {
+                    const userActions = actions.filter(a => a.userId === currentUser.id && a.videoId === v.id);
+                    const hasLiked = userActions.some(a => a.action === 'like');
+                    const hasCommented = userActions.some(a => a.action === 'comment');
+                    
+                    return `
+                    <div class="video-item bg-white rounded-lg shadow-sm p-4">
+                        <div class="flex items-center gap-3 cursor-pointer" onclick="openVideo('${v.id}')">
+                            <div class="w-12 h-12 flex items-center justify-center rounded-lg ${v.platform === 'youtube' ? 'bg-red-100' : 'bg-black'}">
+                                ${v.platform === 'youtube' ? 
+                                    '<svg class="w-6 h-6 text-red-600" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>' :
+                                    '<svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>'
+                                }
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-medium text-gray-800">${sanitize(v.title)}</h4>
+                                <p class="text-xs text-gray-500">${v.platform === 'youtube' ? 'YouTube' : 'TikTok'}</p>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex gap-2 mt-3 pt-3 border-t">
+                            <span class="text-xs px-2 py-1 rounded ${hasLiked ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}">
+                                ${hasLiked ? '❤️ Liké (+25)' : '🤍 Pas encore liké'}
+                            </span>
+                            <span class="text-xs px-2 py-1 rounded ${hasCommented ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}">
+                                ${hasCommented ? '💬 Commenté (+50)' : '💬 Pas encore commenté'}
+                            </span>
+                        </div>
+                    </div>
+                `}).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4 bg-white rounded-lg">Aucune vidéo disponible</p>';
+            }
+        }
+
+        function openVideo(videoId) {
+            const videos = getVideos();
+            const video = videos.find(v => v.id === videoId);
+            if (!video) return;
+
+            currentVideoId = videoId;
+            watchedSeconds = 0;
+
+            document.getElementById('modalVideoTitle').textContent = video.title;
+            document.getElementById('externalVideoLink').href = video.url;
+            document.getElementById('currentWatchTime').textContent = '0';
+            document.getElementById('currentVideoGains').textContent = '0';
+            document.getElementById('actionFeedback').textContent = '';
+
+            // Check existing actions for this video
+            const actions = getVideoActions();
+            const userActions = actions.filter(a => a.userId === currentUser.id && a.videoId === videoId);
+            const hasLiked = userActions.some(a => a.action === 'like');
+            const hasCommented = userActions.some(a => a.action === 'comment');
+
+            // Update button states
+            const likeBtn = document.getElementById('likeBtn');
+            const commentBtn = document.getElementById('commentBtn');
+
+            if (hasLiked) {
+                likeBtn.disabled = true;
+                likeBtn.classList.add('action-btn-liked', 'opacity-50', 'cursor-not-allowed');
+                likeBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>Déjà liké ✓</span>';
+            } else {
+                likeBtn.disabled = false;
+                likeBtn.classList.remove('action-btn-liked', 'opacity-50', 'cursor-not-allowed');
+                likeBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>J\'ai liké (+25 FCFA)</span>';
+            }
+
+            if (hasCommented) {
+                commentBtn.disabled = true;
+                commentBtn.classList.add('action-btn-commented', 'opacity-50', 'cursor-not-allowed');
+                commentBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg><span>Déjà commenté ✓</span>';
+            } else {
+                commentBtn.disabled = false;
+                commentBtn.classList.remove('action-btn-commented', 'opacity-50', 'cursor-not-allowed');
+                commentBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg><span>J\'ai commenté (+50 FCFA)</span>';
+            }
+
+            let embedUrl = video.url;
+            if (video.platform === 'youtube') {
+                const match = video.url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+                if (match) embedUrl = `https://www.youtube.com/embed/${match[1]}?autoplay=1`;
+            } else if (video.platform === 'tiktok') {
+                const match = video.url.match(/tiktok\.com\/@[\w.]+\/video\/(\d+)/);
+                if (match) embedUrl = `https://www.tiktok.com/embed/${match[1]}`;
+            }
+
+            document.getElementById('videoContainer').innerHTML = `
+                <iframe src="${embedUrl}" class="w-full h-full rounded" allowfullscreen allow="autoplay"></iframe>
+            `;
+
+            document.getElementById('videoModal').classList.remove('hidden');
+            document.getElementById('videoModal').classList.add('flex');
+
+            // Start counting watch time
+            videoWatchInterval = setInterval(() => {
+                watchedSeconds++;
+                document.getElementById('currentWatchTime').textContent = watchedSeconds;
+                const gains = Math.floor(watchedSeconds / 12); // 5 FCFA per minute = ~0.083 per second
+                document.getElementById('currentVideoGains').textContent = gains;
+            }, 1000);
+        }
+
+        function handleVideoLike() {
+            if (!currentVideoId || !currentUser) return;
+
+            const actions = getVideoActions();
+            const alreadyLiked = actions.some(a => a.userId === currentUser.id && a.videoId === currentVideoId && a.action === 'like');
+
+            if (alreadyLiked) {
+                showToast('Vous avez déjà liké cette vidéo', 'warning');
+                return;
+            }
+
+            // Record the action
+            actions.push({
+                id: generateId(),
+                userId: currentUser.id,
+                videoId: currentVideoId,
+                action: 'like',
+                bonus: LIKE_BONUS,
+                createdAt: new Date().toISOString()
+            });
+            saveVideoActions(actions);
+
+            // Add bonus to user
+            const users = getUsers();
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) {
+                users[userIndex].bonusGains = (users[userIndex].bonusGains || 0) + LIKE_BONUS;
+                saveUsers(users);
+                currentUser = users[userIndex];
+                localStorage.setItem(DB_KEYS.currentUser, JSON.stringify(currentUser));
+            }
+
+            // Update button
+            const likeBtn = document.getElementById('likeBtn');
+            likeBtn.disabled = true;
+            likeBtn.classList.add('action-btn-liked', 'opacity-50', 'cursor-not-allowed');
+            likeBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><span>Déjà liké ✓</span>';
+
+            document.getElementById('actionFeedback').textContent = `+${LIKE_BONUS} FCFA bonus ajouté pour le like!`;
+            document.getElementById('actionFeedback').className = 'text-xs text-center mt-2 text-green-600 font-medium';
+
+            showToast(`+${LIKE_BONUS} FCFA bonus pour le like!`, 'success');
+            loadDashboard();
+        }
+
+        function handleVideoComment() {
+            if (!currentVideoId || !currentUser) return;
+
+            const actions = getVideoActions();
+            const alreadyCommented = actions.some(a => a.userId === currentUser.id && a.videoId === currentVideoId && a.action === 'comment');
+
+            if (alreadyCommented) {
+                showToast('Vous avez déjà commenté cette vidéo', 'warning');
+                return;
+            }
+
+            // Record the action
+            actions.push({
+                id: generateId(),
+                userId: currentUser.id,
+                videoId: currentVideoId,
+                action: 'comment',
+                bonus: COMMENT_BONUS,
+                createdAt: new Date().toISOString()
+            });
+            saveVideoActions(actions);
+
+            // Add bonus to user
+            const users = getUsers();
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex !== -1) {
+                users[userIndex].bonusGains = (users[userIndex].bonusGains || 0) + COMMENT_BONUS;
+                saveUsers(users);
+                currentUser = users[userIndex];
+                localStorage.setItem(DB_KEYS.currentUser, JSON.stringify(currentUser));
+            }
+
+            // Update button
+            const commentBtn = document.getElementById('commentBtn');
+            commentBtn.disabled = true;
+            commentBtn.classList.add('action-btn-commented', 'opacity-50', 'cursor-not-allowed');
+            commentBtn.innerHTML = '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg><span>Déjà commenté ✓</span>';
+
+            document.getElementById('actionFeedback').textContent = `+${COMMENT_BONUS} FCFA bonus ajouté pour le commentaire!`;
+            document.getElementById('actionFeedback').className = 'text-xs text-center mt-2 text-purple-600 font-medium';
+
+            showToast(`+${COMMENT_BONUS} FCFA bonus pour le commentaire!`, 'success');
+            loadDashboard();
+        }
+
+        function closeVideoModal() {
+            if (videoWatchInterval) {
+                clearInterval(videoWatchInterval);
+                videoWatchInterval = null;
+            }
+
+            // Save watch time and gains
+            if (currentVideoId && watchedSeconds > 0) {
+                const users = getUsers();
+                const userIndex = users.findIndex(u => u.id === currentUser.id);
+                
+                if (userIndex !== -1) {
+                    users[userIndex].watchTime += watchedSeconds;
+                    const gainsToAdd = Math.floor((watchedSeconds / 60) * VIDEO_RATE);
+                    users[userIndex].videoGains += gainsToAdd;
+                    saveUsers(users);
+                    
+                    currentUser = users[userIndex];
+                    localStorage.setItem(DB_KEYS.currentUser, JSON.stringify(currentUser));
+                    
+                    if (gainsToAdd > 0) {
+                        showToast(`+${gainsToAdd} FCFA gagnés pour le visionnage!`, 'success');
+                    }
+                    
+                    loadDashboard();
+                }
+            }
+
+            document.getElementById('videoModal').classList.add('hidden');
+            document.getElementById('videoModal').classList.remove('flex');
+            document.getElementById('videoContainer').innerHTML = '';
+            currentVideoId = null;
+            watchedSeconds = 0;
+
+            // Refresh video list to show updated action status
+            loadVideos();
+        }
+
+        // ============================================================
+        // REFERRALS
+        // ============================================================
+        function loadReferrals() {
+            const referrals = getReferrals();
+            const users = getUsers();
+            const userReferrals = referrals.filter(r => r.referrerId === currentUser.id);
+
+            const container = document.getElementById('referralsList');
+
+            if (userReferrals.length > 0) {
+                container.innerHTML = userReferrals.map(r => {
+                    const referred = users.find(u => u.id === r.referredId);
+                    const statusClass = referred && referred.status === 'validated' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-yellow-100 text-yellow-800';
+                    const statusText = referred && referred.status === 'validated' ? 'Actif' : 'En attente';
+                    const commissionText = referred && referred.status === 'validated' 
+                        ? `<span class="text-green-600 font-bold">+${r.commission} FCFA</span>` 
+                        : '<span class="text-gray-400">En attente</span>';
+
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <div>
+                                <p class="font-medium text-sm">${referred ? sanitize(referred.name) : 'Inconnu'}</p>
+                                <p class="text-xs text-gray-500">Niveau ${r.level}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs px-2 py-1 rounded ${statusClass}">${statusText}</span>
+                                <p class="text-sm mt-1">${commissionText}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Aucun filleul pour le moment</p>';
+            }
+        }
+
+        function copyReferralCode() {
+            const code = document.getElementById('referralCode').value;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Code copié!', 'success');
+            });
+        }
+
+        function copyReferralLink() {
+            const link = document.getElementById('referralLink').value;
+            navigator.clipboard.writeText(link).then(() => {
+                showToast('Lien copié!', 'success');
+            });
+        }
+
+        // ============================================================
+        // WITHDRAWALS
+        // ============================================================
+        function setWithdrawMethod(method) {
+            withdrawMethod = method;
+            document.getElementById('btnDirect').className = method === 'direct' 
+                ? 'flex-1 py-2 px-4 bg-blue-600 text-white rounded font-medium' 
+                : 'flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded font-medium';
+            document.getElementById('btnCrypto').className = method === 'crypto' 
+                ? 'flex-1 py-2 px-4 bg-blue-600 text-white rounded font-medium' 
+                : 'flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded font-medium';
+            document.getElementById('cryptoFields').classList.toggle('hidden', method !== 'crypto');
+
+            // Update minimum info
+            const minInfo = document.getElementById('withdrawMinInfo');
+            const minText = document.getElementById('withdrawMinText');
+            const amountInput = document.getElementById('withdrawAmount');
+
+            if (method === 'crypto') {
+                minInfo.innerHTML = `<p class="text-sm text-blue-800"><strong>Minimum Crypto:</strong> 10 000 FCFA</p>`;
+                minText.textContent = 'Minimum: 10 000 FCFA (Crypto)';
+                amountInput.min = MIN_WITHDRAW_CRYPTO;
+            } else {
+                minInfo.innerHTML = `<p class="text-sm text-blue-800"><strong>Minimum Mobile Money:</strong> 1 000 FCFA</p>`;
+                minText.textContent = 'Minimum: 1 000 FCFA (Mobile Money)';
+                amountInput.min = MIN_WITHDRAW_DIRECT;
+            }
+        }
+
+        function handleWithdraw(e) {
+            e.preventDefault();
+            
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            const cryptoAddress = document.getElementById('cryptoAddress').value.trim();
+            const screenshotInput = document.getElementById('screenshot');
+
+            // Refresh user data
+            const users = getUsers();
+            const freshUser = users.find(u => u.id === currentUser.id);
+            const bonusGains = freshUser.bonusGains || 0;
+            const totalGains = freshUser.referralGains + freshUser.videoGains + bonusGains;
+
+            if (amount > totalGains) {
+                showToast('Solde insuffisant', 'error');
+                return;
+            }
+
+            // Check minimum amounts based on method
+            if (withdrawMethod === 'direct' && amount < MIN_WITHDRAW_DIRECT) {
+                showToast(`Le montant minimum pour Mobile Money est de ${MIN_WITHDRAW_DIRECT.toLocaleString()} FCFA`, 'error');
+                return;
+            }
+
+            if (withdrawMethod === 'crypto' && amount < MIN_WITHDRAW_CRYPTO) {
+                showToast(`Le montant minimum pour Crypto est de ${MIN_WITHDRAW_CRYPTO.toLocaleString()} FCFA`, 'error');
+                return;
+            }
+
+            if (withdrawMethod === 'crypto' && !cryptoAddress) {
+                showToast('Veuillez entrer votre adresse crypto', 'error');
+                return;
+            }
+
+            if (!screenshotInput.files[0]) {
+                showToast('Veuillez joindre une capture d\'écran', 'error');
+                return;
+            }
+
+            // Read screenshot file
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const withdrawal = {
+                    id: generateId(),
+                    userId: currentUser.id,
+                    userName: currentUser.name,
+                    userPhone: currentUser.phone,
+                    amount,
+                    method: withdrawMethod,
+                    cryptoAddress: withdrawMethod === 'crypto' ? cryptoAddress : null,
+                    screenshot: event.target.result,
+                    status: 'pending',
+                    createdAt: new Date().toISOString()
+                };
+
+                const withdrawals = getWithdrawals();
+                withdrawals.push(withdrawal);
+                saveWithdrawals(withdrawals);
+
+                document.getElementById('withdrawForm').reset();
+                setWithdrawMethod('direct');
+                showToast('Demande de retrait soumise!', 'success');
+                loadWithdrawHistory();
+            };
+            reader.readAsDataURL(screenshotInput.files[0]);
+        }
+
+        function loadWithdrawHistory() {
+            const withdrawals = getWithdrawals();
+            const userWithdrawals = withdrawals.filter(w => w.userId === currentUser.id);
+            const container = document.getElementById('withdrawHistory');
+
+            if (userWithdrawals.length > 0) {
+                container.innerHTML = userWithdrawals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(w => {
+                    const statusClass = w.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                       w.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                       'bg-red-100 text-red-800';
+                    const statusText = w.status === 'pending' ? 'En attente' :
+                                      w.status === 'approved' ? 'Traité' : 'Refusé';
+
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                            <div>
+                                <p class="font-medium text-sm">${w.amount.toLocaleString()} FCFA</p>
+                                <p class="text-xs text-gray-500">${w.method === 'crypto' ? 'Crypto' : 'Mobile Money'} • ${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Aucune demande de retrait</p>';
+            }
+        }
+
+        // ============================================================
+        // ADMIN FUNCTIONS
+        // ============================================================
+        function loadAdminData() {
+            loadPendingUsers();
+        }
+
+        function loadPendingUsers() {
+            const users = getUsers();
+            const pendingUsers = users.filter(u => u.status === 'pending' && !u.isAdmin);
+            const container = document.getElementById('pendingUsersList');
+
+            if (pendingUsers.length > 0) {
+                container.innerHTML = pendingUsers.map(u => `
+                    <div class="p-4 border rounded-lg">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="font-medium">${sanitize(u.name)}</p>
+                                <p class="text-sm text-gray-500">${sanitize(u.email)}</p>
+                                <p class="text-sm text-gray-500">${sanitize(u.phone)}</p>
+                                <p class="text-xs text-gray-400 mt-1">${new Date(u.createdAt).toLocaleDateString('fr-FR')}</p>
+                            </div>
+                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">En attente</span>
+                        </div>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="validateUser('${u.id}')" class="flex-1 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 font-medium">Valider (manuel)</button>
+                            <button onclick="rejectUser('${u.id}')" class="flex-1 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700 font-medium">Refuser</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Aucun compte en attente</p>';
+            }
+        }
+
+        function loadAllUsers() {
+            const users = getUsers();
+            const referrals = getReferrals();
+            const normalUsers = users.filter(u => !u.isAdmin);
+            const container = document.getElementById('allUsersList');
+
+            if (normalUsers.length > 0) {
+                container.innerHTML = normalUsers.map(u => {
+                    const directReferrals = referrals.filter(r => r.referrerId === u.id && r.level === 1);
+                    const statusClass = u.status === 'validated' ? 'bg-green-100 text-green-800' :
+                                       u.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                       'bg-yellow-100 text-yellow-800';
+                    const statusText = u.status === 'validated' ? 'Validé' :
+                                      u.status === 'rejected' ? 'Refusé' : 'En attente';
+                    const bonusGains = u.bonusGains || 0;
+
+                    return `
+                        <div class="p-4 border rounded-lg">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">${sanitize(u.name)}</p>
+                                    <p class="text-sm text-gray-500">${sanitize(u.email)}</p>
+                                    <p class="text-sm text-gray-500">${sanitize(u.phone)}</p>
+                                    <p class="text-xs text-gray-400 mt-1">Gains: ${(u.referralGains + u.videoGains + bonusGains).toLocaleString()} FCFA • Filleuls: ${directReferrals.length}</p>
+                                    ${u.paidAt ? `<p class="text-xs text-green-600 mt-1">Payé via CinetPay</p>` : ''}
+                                </div>
+                                <span class="text-xs px-2 py-1 rounded ${statusClass}">${statusText}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Aucun utilisateur</p>';
+            }
+        }
+
+        function validateUser(userId) {
+            const users = getUsers();
+            const userIndex = users.findIndex(u => u.id === userId);
+            
+            if (userIndex !== -1) {
+                users[userIndex].status = 'validated';
+                users[userIndex].validatedManually = true;
+                users[userIndex].validatedAt = new Date().toISOString();
+                
+                // Credit referral commissions
+                const referrals = getReferrals();
+                referrals.forEach(r => {
+                    if (r.referredId === userId && !r.credited) {
+                        const referrerIndex = users.findIndex(u => u.id === r.referrerId);
+                        if (referrerIndex !== -1 && users[referrerIndex].status === 'validated') {
+                            users[referrerIndex].referralGains += r.commission;
+                            r.credited = true;
+                        }
+                    }
+                });
+                
+                saveUsers(users);
+                saveReferrals(referrals);
+                
+                showToast('Compte validé avec succès!', 'success');
+                loadPendingUsers();
+                loadAllUsers();
+            }
+        }
+
+        function rejectUser(userId) {
+            const users = getUsers();
+            const userIndex = users.findIndex(u => u.id === userId);
+            
+            if (userIndex !== -1) {
+                users[userIndex].status = 'rejected';
+                saveUsers(users);
+                
+                showToast('Compte refusé', 'info');
+                loadPendingUsers();
+                loadAllUsers();
+            }
+        }
+
+        function loadWithdrawals() {
+            const withdrawals = getWithdrawals();
+            const container = document.getElementById('withdrawalsList');
+
+            if (withdrawals.length > 0) {
+                container.innerHTML = withdrawals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(w => {
+                    const statusClass = w.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                       w.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                       'bg-red-100 text-red-800';
+                    const statusText = w.status === 'pending' ? 'En attente' :
+                                      w.status === 'approved' ? 'Traité' : 'Refusé';
+                    const methodLabel = w.method === 'crypto' ? 'Crypto' : 'Mobile Money';
+
+                    return `
+                        <div class="p-4 border rounded-lg">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="font-medium">${sanitize(w.userName)}</p>
+                                    <p class="text-sm text-gray-500">${sanitize(w.userPhone)}</p>
+                                    <p class="text-lg font-bold text-blue-600">${w.amount.toLocaleString()} FCFA</p>
+                                    <p class="text-sm text-gray-500">${methodLabel}${w.method === 'crypto' ? ': ' + (w.cryptoAddress || 'N/A') : ''}</p>
+                                    <p class="text-xs text-gray-400">${new Date(w.createdAt).toLocaleString('fr-FR')}</p>
+                                </div>
+                                <span class="text-xs px-2 py-1 rounded ${statusClass}">${statusText}</span>
+                            </div>
+                            ${w.screenshot ? `
+                                <div class="mb-3">
+                                    <img src="${w.screenshot}" alt="Screenshot" class="w-full h-32 object-cover rounded cursor-pointer border" onclick="openScreenshot('${w.screenshot}')">
+                                </div>
+                            ` : ''}
+                            ${w.status === 'pending' ? `
+                                <div class="flex gap-2">
+                                    <button onclick="approveWithdraw('${w.id}')" class="flex-1 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 font-medium">Approuver</button>
+                                    <button onclick="rejectWithdraw('${w.id}')" class="flex-1 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700 font-medium">Refuser</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Aucune demande de retrait</p>';
+            }
+        }
+
+        function openScreenshot(src) {
+            document.getElementById('screenshotImage').src = src;
+            document.getElementById('screenshotModal').classList.remove('hidden');
+            document.getElementById('screenshotModal').classList.add('flex');
+        }
+
+        function closeScreenshotModal() {
+            document.getElementById('screenshotModal').classList.add('hidden');
+            document.getElementById('screenshotModal').classList.remove('flex');
+        }
+
+        function approveWithdraw(withdrawId) {
+            const withdrawals = getWithdrawals();
+            const users = getUsers();
+            const wIndex = withdrawals.findIndex(w => w.id === withdrawId);
+            
+            if (wIndex !== -1) {
+                const withdrawal = withdrawals[wIndex];
+                const userIndex = users.findIndex(u => u.id === withdrawal.userId);
+                
+                if (userIndex !== -1) {
+                    // Deduct from gains (prioritize bonus, then video, then referral)
+                    let remaining = withdrawal.amount;
+                    const user = users[userIndex];
+                    
+                    // First from bonus gains
+                    const bonusGains = user.bonusGains || 0;
+                    if (bonusGains >= remaining) {
+                        users[userIndex].bonusGains = bonusGains - remaining;
+                        remaining = 0;
+                    } else {
+                        users[userIndex].bonusGains = 0;
+                        remaining -= bonusGains;
+                    }
+                    
+                    // Then from video gains
+                    if (remaining > 0 && user.videoGains >= remaining) {
+                        users[userIndex].videoGains -= remaining;
+                        remaining = 0;
+                    } else if (remaining > 0) {
+                        remaining -= user.videoGains;
+                        users[userIndex].videoGains = 0;
+                    }
+                    
+                    // Finally from referral gains
+                    if (remaining > 0) {
+                        users[userIndex].referralGains -= remaining;
+                    }
+                    
+                    saveUsers(users);
+                }
+                
+                withdrawals[wIndex].status = 'approved';
+                withdrawals[wIndex].approvedAt = new Date().toISOString();
+                saveWithdrawals(withdrawals);
+                
+                showToast('Retrait approuvé!', 'success');
+                loadWithdrawals();
+            }
+        }
+
+        function rejectWithdraw(withdrawId) {
+            const withdrawals = getWithdrawals();
+            const wIndex = withdrawals.findIndex(w => w.id === withdrawId);
+            
+            if (wIndex !== -1) {
+                withdrawals[wIndex].status = 'rejected';
+                withdrawals[wIndex].rejectedAt = new Date().toISOString();
+                saveWithdrawals(withdrawals);
+                
+                showToast('Retrait refusé', 'info');
+                loadWithdrawals();
+            }
+        }
+
+        function loadAdminVideos() {
+            const videos = getVideos();
+            const container = document.getElementById('adminVideosList');
+
+            if (videos.length > 0) {
+                container.innerHTML = videos.map(v => `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                        <div class="flex-1">
+                            <p class="font-medium text-sm">${sanitize(v.title)}</p>
+                            <p class="text-xs text-gray-500">${v.platform} • ${sanitize(v.url).substring(0, 40)}...</p>
+                        </div>
+                        <button onclick="deleteVideo('${v.id}')" class="text-red-600 hover:text-red-800 p-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Aucune vidéo</p>';
+            }
+        }
+
+        function handleAddVideo(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('videoTitle').value.trim();
+            const url = document.getElementById('videoUrl').value.trim();
+            const platform = document.getElementById('videoPlatform').value;
+
+            const video = {
+                id: generateId(),
+                title: sanitize(title),
+                url: sanitize(url),
+                platform,
+                createdAt: new Date().toISOString()
+            };
+
+            const videos = getVideos();
+            videos.push(video);
+            saveVideos(videos);
+
+            document.getElementById('addVideoForm').reset();
+            showToast('Vidéo ajoutée!', 'success');
+            loadAdminVideos();
+        }
+
+        function deleteVideo(videoId) {
+            if (confirm('Supprimer cette vidéo?')) {
+                const videos = getVideos();
+                const filtered = videos.filter(v => v.id !== videoId);
+                saveVideos(filtered);
+                
+                showToast('Vidéo supprimée', 'info');
+                loadAdminVideos();
+            }
+        }
+
+        function loadPayments() {
+            const payments = getPayments();
+            const container = document.getElementById('paymentsList');
+
+            if (payments.length > 0) {
+                container.innerHTML = payments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(p => `
+                    <div class="p-4 border rounded-lg bg-green-50">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-medium">${sanitize(p.userName)}</p>
+                                <p class="text-sm text-gray-500">${sanitize(p.userEmail)}</p>
+                                <p class="text-sm text-gray-500">${sanitize(p.userPhone)}</p>
+                                <p class="text-lg font-bold text-green-600">${p.amount.toLocaleString()} FCFA</p>
+                                <p class="text-xs text-gray-400">Transaction: ${p.transactionId}</p>
+                                <p class="text-xs text-gray-400">${new Date(p.createdAt).toLocaleString('fr-FR')}</p>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">Complété</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Aucun paiement enregistré</p>';
+            }
+        }
+    </script>
+</body>
+</html>

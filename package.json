@@ -1,0 +1,27 @@
+{
+  "name": "motosu-agencies",
+  "version": "1.0.0",
+  "description": "Plateforme Motosu Agencies - Parrainage et activités vidéo",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "build": "echo 'No build step required'"
+  },
+  "keywords": [
+    "motosu",
+    "agencies",
+    "referral",
+    "mlm",
+    "cinetpay"
+  ],
+  "author": "Motosu Agencies",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
