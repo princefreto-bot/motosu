@@ -474,6 +474,16 @@ app.post('/api/payment/notify', (req, res) => {
   res.json({ success: true });
 });
 
+// API: Retour paiement réussi
+app.get('/api/payment/return', (req, res) => {
+  res.redirect('/');
+});
+
+// API: Annulation paiement
+app.get('/api/payment/cancel', (req, res) => {
+  res.redirect('/');
+});
+
 // === ADMIN APIs ===
 
 // Admin: Utilisateurs en attente
