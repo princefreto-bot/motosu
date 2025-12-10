@@ -1,7 +1,7 @@
 {
   "name": "motosu-agencies",
   "version": "1.0.0",
-  "description": "Motosu Agencies - Plateforme de parrainage et micro-tâches",
+  "description": "Plateforme Motosu Agencies - Parrainage et activités vidéo",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
