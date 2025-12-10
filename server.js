@@ -10,7 +10,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Stockage en mémoire
 const db = {
-  // Configuration admin (numéros de paiement)
   config: {
     paymentNumbers: [
       { operator: 'Orange Money', number: '+225 07 00 00 00 00', name: 'MOTOSU AGENCIES' },
@@ -18,7 +17,8 @@ const db = {
       { operator: 'Wave', number: '+225 01 00 00 00 00', name: 'MOTOSU AGENCIES' },
       { operator: 'Moov Money', number: '+225 01 00 00 00 00', name: 'MOTOSU AGENCIES' }
     ],
-    subscriptionAmount: 4000
+    subscriptionAmount: 4000,
+    minReferralsForWithdraw: 4
   },
   users: [{
     id: 'admin-001',
@@ -36,15 +36,48 @@ const db = {
     tasksCompletedToday: [],
     lastTaskDate: null,
     completedTasks: [],
+    watchedVideos: [],
     subscriptionDate: null,
     paymentProof: null
   }],
+  videos: [
+    {
+      id: 'video-1',
+      platform: 'youtube',
+      title: 'Comment réussir dans le marketing digital en Afrique',
+      url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+      videoId: 'dQw4w9WgXcQ',
+      duration: 3,
+      reward: 15,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'video-2',
+      platform: 'youtube',
+      title: 'Les secrets de l\'entrepreneuriat africain',
+      url: 'https://www.youtube.com/embed/3JZ_D3ELwOQ',
+      videoId: '3JZ_D3ELwOQ',
+      duration: 4,
+      reward: 20,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: 'video-3',
+      platform: 'tiktok',
+      title: 'Astuce business du jour',
+      url: 'https://www.tiktok.com/embed/v2/7234567890123456789',
+      videoId: '7234567890123456789',
+      duration: 1,
+      reward: 5,
+      createdAt: new Date().toISOString()
+    }
+  ],
   tasks: [
     { 
       id: 'task-1', 
       type: 'sondage', 
       title: 'Enquête sur les habitudes de paiement mobile', 
-      reward: 85, 
+      reward: 25, 
       description: 'Répondez à 6 questions sur votre utilisation de Mobile Money',
       content: {
         questions: [
@@ -79,7 +112,7 @@ const db = {
       id: 'task-2', 
       type: 'sondage', 
       title: 'Étude sur l\'utilisation des réseaux sociaux', 
-      reward: 100, 
+      reward: 35, 
       description: 'Partagez vos habitudes sur les réseaux sociaux (8 questions)',
       content: {
         questions: [
@@ -122,7 +155,7 @@ const db = {
       id: 'task-3', 
       type: 'verification', 
       title: 'Vérification d\'adresses email professionnelles', 
-      reward: 35, 
+      reward: 15, 
       description: 'Identifiez les 5 adresses email valides parmi la liste',
       content: {
         instruction: 'Sélectionnez uniquement les adresses email qui ont un format valide (exemple: nom@domaine.com)',
@@ -141,10 +174,10 @@ const db = {
       id: 'task-4', 
       type: 'classification', 
       title: 'Classification de produits e-commerce', 
-      reward: 45, 
+      reward: 20, 
       description: 'Classez 8 produits dans leurs catégories respectives',
       content: {
-        instruction: 'Glissez chaque produit dans la bonne catégorie',
+        instruction: 'Associez chaque produit à sa catégorie appropriée',
         categories: ['Électronique', 'Mode', 'Maison', 'Alimentation'],
         items: [
           { name: 'Smartphone Samsung Galaxy', correctCategory: 'Électronique' },
@@ -162,18 +195,18 @@ const db = {
       id: 'task-5', 
       type: 'transcription', 
       title: 'Transcription d\'un message vocal professionnel', 
-      reward: 110, 
+      reward: 40, 
       description: 'Recopiez exactement le texte affiché sans fautes',
       content: {
-        textToTranscribe: 'Bonjour et bienvenue chez Motosu Agencies. Nous sommes heureux de vous accompagner dans votre parcours entrepreneurial. Notre équipe reste à votre disposition pour toute question. Merci de votre confiance et à très bientôt.',
-        minAccuracy: 90
+        textToTranscribe: 'Bonjour et bienvenue chez Motosu Agencies. Nous sommes heureux de vous accompagner dans votre parcours entrepreneurial. Notre équipe reste à votre disposition pour toute question. Merci de votre confiance.',
+        minAccuracy: 85
       }
     },
     { 
       id: 'task-6', 
       type: 'sondage', 
       title: 'Enquête sur les services bancaires mobiles', 
-      reward: 120, 
+      reward: 45, 
       description: 'Donnez votre avis sur les banques et services financiers (10 questions)',
       content: {
         questions: [
@@ -224,7 +257,7 @@ const db = {
       id: 'task-7', 
       type: 'verification', 
       title: 'Vérification de numéros de téléphone', 
-      reward: 40, 
+      reward: 15, 
       description: 'Identifiez les numéros au format international correct',
       content: {
         instruction: 'Sélectionnez les numéros qui respectent le format international (+225 XX XX XX XX XX)',
@@ -243,7 +276,7 @@ const db = {
       id: 'task-8', 
       type: 'classification', 
       title: 'Classification de contenus digitaux', 
-      reward: 50, 
+      reward: 20, 
       description: 'Classez 8 types de contenus par catégorie',
       content: {
         instruction: 'Associez chaque contenu à sa catégorie appropriée',
@@ -264,7 +297,7 @@ const db = {
       id: 'task-9', 
       type: 'sondage', 
       title: 'Étude sur les habitudes alimentaires', 
-      reward: 90, 
+      reward: 30, 
       description: 'Partagez vos habitudes de consommation alimentaire (6 questions)',
       content: {
         questions: [
@@ -299,17 +332,16 @@ const db = {
       id: 'task-10', 
       type: 'transcription', 
       title: 'Transcription d\'un slogan commercial', 
-      reward: 75, 
+      reward: 25, 
       description: 'Recopiez le message publicitaire sans erreur',
       content: {
-        textToTranscribe: 'Motosu Agencies, votre partenaire de confiance pour réussir en Afrique. Rejoignez notre communauté de plus de dix mille entrepreneurs et développez votre activité dès aujourd\'hui. Ensemble, construisons l\'avenir.',
-        minAccuracy: 90
+        textToTranscribe: 'Motosu Agencies, votre partenaire de confiance pour réussir en Afrique. Rejoignez notre communauté et développez votre activité dès aujourd\'hui.',
+        minAccuracy: 85
       }
     }
   ],
   withdrawals: [],
-  payments: [],
-  subscriptions: []
+  payments: []
 };
 
 // Utilitaires
@@ -325,7 +357,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// API: Configuration (numéros de paiement)
+// Routes de paiement (pour compatibilité)
+app.get('/api/payment/return', (req, res) => res.redirect('/'));
+app.get('/api/payment/cancel', (req, res) => res.redirect('/'));
+app.get('/api/payment/notify', (req, res) => res.json({ success: true }));
+app.post('/api/payment/notify', (req, res) => res.json({ success: true }));
+
+// API: Configuration
 app.get('/api/config', (req, res) => {
   res.json({
     paymentNumbers: db.config.paymentNumbers,
@@ -367,6 +405,7 @@ app.post('/api/register', (req, res) => {
     tasksCompletedToday: [],
     lastTaskDate: null,
     completedTasks: [],
+    watchedVideos: [],
     subscriptionDate: null,
     paymentProof: null
   };
@@ -411,7 +450,8 @@ app.get('/api/dashboard/:userId', (req, res) => {
       referralsCount: referrals.length,
       level2Count: level2.length,
       level3Count: level3.length,
-      tasksCompleted: user.completedTasks.length
+      tasksCompleted: user.completedTasks.length,
+      videosWatched: user.watchedVideos.length
     }
   });
 });
@@ -435,7 +475,6 @@ app.post('/api/payment/proof', (req, res) => {
   };
   user.status = 'pending_payment';
   
-  // Enregistrer dans les paiements
   db.payments.push({
     id: generateId(),
     userId: userId,
@@ -453,16 +492,51 @@ app.post('/api/payment/proof', (req, res) => {
   res.json({ success: true, message: 'Preuve de paiement soumise. En attente de validation.' });
 });
 
+// API: Vidéos
+app.get('/api/videos', (req, res) => {
+  res.json(db.videos);
+});
+
+// API: Regarder une vidéo
+app.post('/api/videos/:videoId/watch', (req, res) => {
+  const { userId, watchTime } = req.body;
+  const { videoId } = req.params;
+  
+  const user = db.users.find(u => u.id === userId);
+  if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+  
+  if (user.status !== 'validated') {
+    return res.status(403).json({ error: 'Compte non validé' });
+  }
+  
+  const video = db.videos.find(v => v.id === videoId);
+  if (!video) return res.status(404).json({ error: 'Vidéo non trouvée' });
+  
+  // Vérifier si déjà regardée
+  if (user.watchedVideos.includes(videoId)) {
+    return res.status(400).json({ error: 'Vous avez déjà regardé cette vidéo' });
+  }
+  
+  // Vérifier que le temps de visionnage est suffisant (au moins 80% de la durée)
+  const requiredTime = video.duration * 60 * 0.8; // 80% en secondes
+  if (watchTime < requiredTime) {
+    return res.status(400).json({ error: `Regardez au moins ${Math.ceil(requiredTime)} secondes pour valider` });
+  }
+  
+  user.watchedVideos.push(videoId);
+  user.earnings += video.reward;
+  
+  res.json({ 
+    success: true, 
+    reward: video.reward, 
+    totalEarnings: user.earnings,
+    message: `Bravo! +${video.reward} FCFA gagnés`
+  });
+});
+
 // API: Tâches
 app.get('/api/tasks', (req, res) => {
   res.json(db.tasks);
-});
-
-// API: Récupérer une tâche spécifique
-app.get('/api/tasks/:taskId', (req, res) => {
-  const task = db.tasks.find(t => t.id === req.params.taskId);
-  if (!task) return res.status(404).json({ error: 'Tâche non trouvée' });
-  res.json(task);
 });
 
 // API: Compléter tâche
@@ -494,13 +568,11 @@ app.post('/api/tasks/:taskId/complete', (req, res) => {
     return res.status(400).json({ error: 'Limite de 10 tâches par jour atteinte. Revenez demain!' });
   }
   
-  // Validation selon le type de tâche
   let isValid = false;
   let score = 0;
   
   if (task.type === 'sondage') {
-    // Vérifier que toutes les questions ont une réponse
-    if (answers && answers.length === task.content.questions.length) {
+    if (answers && Array.isArray(answers) && answers.length === task.content.questions.length) {
       const allAnswered = answers.every(a => a !== null && a !== undefined && a !== '');
       if (allAnswered) {
         isValid = true;
@@ -512,58 +584,82 @@ app.post('/api/tasks/:taskId/complete', (req, res) => {
       return res.status(400).json({ error: `Vous devez répondre aux ${task.content.questions.length} questions` });
     }
   } else if (task.type === 'verification') {
-    // Vérifier les bonnes réponses
     if (answers && Array.isArray(answers)) {
       const correctItems = task.content.items.filter(item => item.isValid);
-      const selectedCorrect = answers.filter(idx => task.content.items[idx]?.isValid).length;
-      const selectedIncorrect = answers.filter(idx => !task.content.items[idx]?.isValid).length;
+      const incorrectItems = task.content.items.filter(item => !item.isValid);
       
-      score = Math.max(0, (selectedCorrect - selectedIncorrect) / correctItems.length * 100);
-      isValid = score >= 50;
+      let correctSelected = 0;
+      let incorrectSelected = 0;
+      
+      answers.forEach(idx => {
+        if (task.content.items[idx]?.isValid) {
+          correctSelected++;
+        } else {
+          incorrectSelected++;
+        }
+      });
+      
+      // Score basé sur les bonnes sélections moins les mauvaises
+      const maxScore = correctItems.length;
+      score = Math.max(0, ((correctSelected - incorrectSelected) / maxScore) * 100);
+      isValid = score >= 50 && correctSelected >= Math.floor(correctItems.length / 2);
       
       if (!isValid) {
-        return res.status(400).json({ error: 'Trop d\'erreurs. Essayez de mieux identifier les éléments valides.' });
+        return res.status(400).json({ error: 'Trop d\'erreurs. Identifiez correctement les éléments valides.' });
       }
     } else {
       return res.status(400).json({ error: 'Veuillez sélectionner les éléments valides' });
     }
   } else if (task.type === 'classification') {
-    // Vérifier les classifications
     if (answers && typeof answers === 'object') {
       let correct = 0;
+      const totalItems = task.content.items.length;
+      
       task.content.items.forEach((item, idx) => {
         if (answers[idx] === item.correctCategory) correct++;
       });
-      score = (correct / task.content.items.length) * 100;
+      
+      score = (correct / totalItems) * 100;
       isValid = score >= 60;
       
       if (!isValid) {
-        return res.status(400).json({ error: `Score insuffisant (${Math.round(score)}%). Minimum 60% requis.` });
+        return res.status(400).json({ error: `Score insuffisant (${Math.round(score)}%). Minimum 60% requis. Vous avez ${correct}/${totalItems} correct.` });
       }
     } else {
       return res.status(400).json({ error: 'Veuillez classifier tous les éléments' });
     }
   } else if (task.type === 'transcription') {
-    // Vérifier la transcription
-    if (answers && typeof answers === 'string') {
-      const original = task.content.textToTranscribe.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôùûüç\s]/g, '');
-      const submitted = answers.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôùûüç\s]/g, '');
+    if (answers && typeof answers === 'string' && answers.trim().length > 10) {
+      const normalize = (str) => str.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
       
-      // Calcul de similarité simple
-      const words1 = original.split(/\s+/);
-      const words2 = submitted.split(/\s+/);
+      const original = normalize(task.content.textToTranscribe);
+      const submitted = normalize(answers);
+      
+      // Calcul de similarité par mots
+      const words1 = original.split(' ');
+      const words2 = submitted.split(' ');
+      
       let matches = 0;
       words1.forEach(w => {
-        if (words2.includes(w)) matches++;
+        const idx = words2.indexOf(w);
+        if (idx !== -1) {
+          matches++;
+          words2.splice(idx, 1);
+        }
       });
+      
       score = (matches / words1.length) * 100;
       isValid = score >= task.content.minAccuracy;
       
       if (!isValid) {
-        return res.status(400).json({ error: `Précision insuffisante (${Math.round(score)}%). Minimum ${task.content.minAccuracy}% requis.` });
+        return res.status(400).json({ error: `Précision insuffisante (${Math.round(score)}%). Minimum ${task.content.minAccuracy}% requis. Vérifiez l'orthographe.` });
       }
     } else {
-      return res.status(400).json({ error: 'Veuillez saisir la transcription' });
+      return res.status(400).json({ error: 'Veuillez saisir la transcription complète (minimum 10 caractères)' });
     }
   }
   
@@ -593,12 +689,17 @@ app.get('/api/referrals/:userId', (req, res) => {
   const level2 = db.users.filter(u => level1.some(r => r.id === u.referredBy)).map(u => ({ ...u, password: undefined }));
   const level3 = db.users.filter(u => level2.some(r => r.id === u.referredBy)).map(u => ({ ...u, password: undefined }));
   
+  const validatedLevel1 = level1.filter(u => u.status === 'validated').length;
+  
   res.json({
     referralCode: user.referralCode,
     referralLink: `https://motosu.onrender.com?ref=${user.referralCode}`,
     level1: { users: level1, commission: 500, total: level1.filter(u => u.status === 'validated').length * 500 },
     level2: { users: level2, commission: 200, total: level2.filter(u => u.status === 'validated').length * 200 },
-    level3: { users: level3, commission: 100, total: level3.filter(u => u.status === 'validated').length * 100 }
+    level3: { users: level3, commission: 100, total: level3.filter(u => u.status === 'validated').length * 100 },
+    canWithdraw: validatedLevel1 >= db.config.minReferralsForWithdraw,
+    validatedReferrals: validatedLevel1,
+    requiredReferrals: db.config.minReferralsForWithdraw
   });
 });
 
@@ -611,6 +712,17 @@ app.post('/api/withdraw', (req, res) => {
   
   if (user.status !== 'validated') {
     return res.status(403).json({ error: 'Compte non validé' });
+  }
+  
+  // Vérifier le nombre de parrainages
+  const referrals = db.users.filter(u => u.referredBy === user.id && u.status === 'validated');
+  if (referrals.length < db.config.minReferralsForWithdraw) {
+    return res.status(400).json({ 
+      error: `Invitez plus d'amis pour débloquer les retraits! Partagez votre lien et grandissez ensemble.`,
+      needMoreReferrals: true,
+      current: referrals.length,
+      required: db.config.minReferralsForWithdraw
+    });
   }
   
   const minAmount = method === 'crypto' ? 10000 : 1000;
@@ -653,7 +765,6 @@ app.get('/api/withdrawals/user/:userId', (req, res) => {
 
 // === ADMIN APIs ===
 
-// Admin: Mettre à jour les numéros de paiement
 app.post('/api/admin/config/payment-numbers', (req, res) => {
   const { paymentNumbers } = req.body;
   if (paymentNumbers && Array.isArray(paymentNumbers)) {
@@ -664,23 +775,19 @@ app.post('/api/admin/config/payment-numbers', (req, res) => {
   }
 });
 
-// Admin: Récupérer configuration
 app.get('/api/admin/config', (req, res) => {
   res.json(db.config);
 });
 
-// Admin: Utilisateurs en attente
 app.get('/api/admin/pending', (req, res) => {
   const pending = db.users.filter(u => u.status === 'pending' || u.status === 'pending_payment').map(u => ({ ...u, password: undefined }));
   res.json(pending);
 });
 
-// Admin: Tous les utilisateurs
 app.get('/api/admin/users', (req, res) => {
   res.json(db.users.map(u => ({ ...u, password: undefined })));
 });
 
-// Admin: Valider utilisateur
 app.post('/api/admin/validate/:userId', (req, res) => {
   const user = db.users.find(u => u.id === req.params.userId);
   if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
@@ -710,7 +817,6 @@ app.post('/api/admin/validate/:userId', (req, res) => {
   res.json({ success: true, user: { ...user, password: undefined } });
 });
 
-// Admin: Rejeter utilisateur
 app.post('/api/admin/reject/:userId', (req, res) => {
   const user = db.users.find(u => u.id === req.params.userId);
   if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
@@ -720,12 +826,10 @@ app.post('/api/admin/reject/:userId', (req, res) => {
   res.json({ success: true });
 });
 
-// Admin: Retraits
 app.get('/api/admin/withdrawals', (req, res) => {
   res.json(db.withdrawals);
 });
 
-// Admin: Approuver retrait
 app.post('/api/admin/withdraw/approve/:withdrawId', (req, res) => {
   const withdrawal = db.withdrawals.find(w => w.id === req.params.withdrawId);
   if (!withdrawal) return res.status(404).json({ error: 'Retrait non trouvé' });
@@ -735,17 +839,69 @@ app.post('/api/admin/withdraw/approve/:withdrawId', (req, res) => {
   res.json({ success: true });
 });
 
-// Admin: Rejeter retrait
 app.post('/api/admin/withdraw/reject/:withdrawId', (req, res) => {
   const withdrawal = db.withdrawals.find(w => w.id === req.params.withdrawId);
   if (!withdrawal) return res.status(404).json({ error: 'Retrait non trouvé' });
   
   withdrawal.status = 'rejected';
-  
-  // Rembourser l'utilisateur
   const user = db.users.find(u => u.id === withdrawal.userId);
   if (user) user.earnings += withdrawal.amount;
   
+  res.json({ success: true });
+});
+
+// Admin: Vidéos
+app.get('/api/admin/videos', (req, res) => {
+  res.json(db.videos);
+});
+
+app.post('/api/admin/videos', (req, res) => {
+  const { platform, title, url, duration, reward } = req.body;
+  
+  if (!platform || !title || !url || !duration || !reward) {
+    return res.status(400).json({ error: 'Tous les champs sont obligatoires' });
+  }
+  
+  // Extraire l'ID de la vidéo
+  let videoId = '';
+  let embedUrl = url;
+  
+  if (platform === 'youtube') {
+    // Formats: youtube.com/watch?v=ID, youtu.be/ID, youtube.com/embed/ID
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (match) {
+      videoId = match[1];
+      embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    }
+  } else if (platform === 'tiktok') {
+    // Format: tiktok.com/@user/video/ID ou juste l'ID
+    const match = url.match(/(?:video\/)?(\d{15,25})/);
+    if (match) {
+      videoId = match[1];
+      embedUrl = `https://www.tiktok.com/embed/v2/${videoId}`;
+    }
+  }
+  
+  const video = {
+    id: 'video-' + generateId(),
+    platform,
+    title,
+    url: embedUrl,
+    videoId,
+    duration: parseInt(duration),
+    reward: parseInt(reward),
+    createdAt: new Date().toISOString()
+  };
+  
+  db.videos.push(video);
+  res.json({ success: true, video });
+});
+
+app.delete('/api/admin/videos/:videoId', (req, res) => {
+  const index = db.videos.findIndex(v => v.id === req.params.videoId);
+  if (index === -1) return res.status(404).json({ error: 'Vidéo non trouvée' });
+  
+  db.videos.splice(index, 1);
   res.json({ success: true });
 });
 
@@ -777,12 +933,10 @@ app.delete('/api/admin/tasks/:taskId', (req, res) => {
   res.json({ success: true });
 });
 
-// Admin: Paiements
 app.get('/api/admin/payments', (req, res) => {
   res.json(db.payments);
 });
 
-// Admin: Stats globales
 app.get('/api/admin/stats', (req, res) => {
   const totalUsers = db.users.filter(u => !u.isAdmin).length;
   const validatedUsers = db.users.filter(u => u.status === 'validated' && !u.isAdmin).length;
@@ -798,11 +952,11 @@ app.get('/api/admin/stats', (req, res) => {
     totalEarnings,
     totalWithdrawals,
     pendingWithdrawals,
-    tasksCount: db.tasks.length
+    tasksCount: db.tasks.length,
+    videosCount: db.videos.length
   });
 });
 
-// Démarrer le serveur
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Motosu Agencies server running on port ${PORT}`);
 });

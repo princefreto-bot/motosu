@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Motosu Agencies</title>
+  <title>Motosu Agencies - Partagez, Gagnez, Grandissez</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
     .toast{position:fixed;top:20px;right:20px;padding:15px 25px;border-radius:8px;color:white;z-index:9999;animation:slideIn .3s ease}
@@ -32,9 +32,13 @@
     .check-item{display:flex;align-items:center;padding:12px 16px;margin:8px 0;background:#f3f4f6;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:all .2s}
     .check-item:hover{background:#e5e7eb}
     .check-item.selected{background:#10b981;color:white;border-color:#059669}
-    .category-select{padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:white}
+    .category-select{padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:white;min-width:120px}
     .progress-bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden}
     .progress-fill{height:100%;background:#10b981;transition:width .3s}
+    .video-card{border-radius:12px;overflow:hidden;background:white;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+    .video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden}
+    .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%}
+    .slogan{background:linear-gradient(135deg,#f97316,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800}
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -48,10 +52,12 @@
       currentPage: 'login',
       config: { paymentNumbers: [], subscriptionAmount: 4000 },
       tasks: [],
+      videos: [],
       currentTask: null,
+      currentVideo: null,
       referrals: null,
       withdrawals: [],
-      adminData: { pending: [], users: [], withdrawals: [], tasks: [], payments: [], stats: {}, config: {} }
+      adminData: { pending: [], users: [], withdrawals: [], tasks: [], videos: [], payments: [], stats: {}, config: {} }
     };
 
     // Utilitaires
@@ -84,7 +90,8 @@
           <div class="card w-full max-w-md">
             <div class="text-center mb-6">
               <h1 class="text-3xl font-bold text-blue-600">🚀 Motosu Agencies</h1>
-              <p class="text-gray-500 mt-2">Plateforme de gains en ligne</p>
+              <p class="slogan text-lg mt-2">"Partagez, Gagnez, Grandissez ensemble"</p>
+              <p class="text-gray-500 mt-1">Plateforme de gains en ligne</p>
             </div>
             <form id="loginForm">
               <input type="email" class="input" placeholder="Email" id="loginEmail" required>
@@ -104,7 +111,8 @@
       register: () => `
         <div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-green-500 to-blue-600">
           <div class="card w-full max-w-md">
-            <h1 class="text-2xl font-bold text-center mb-6 text-blue-600">Créer un compte</h1>
+            <h1 class="text-2xl font-bold text-center mb-2 text-blue-600">Créer un compte</h1>
+            <p class="text-center text-sm text-gray-500 mb-6 slogan">"Partagez, Gagnez, Grandissez ensemble"</p>
             <form id="registerForm">
               <input type="text" class="input" placeholder="Nom complet" id="regName" required>
               <input type="email" class="input" placeholder="Email" id="regEmail" required>
@@ -124,7 +132,8 @@
         <div class="min-h-screen p-4 bg-gray-100">
           <div class="card max-w-2xl mx-auto">
             <button onclick="navigate('login')" class="text-gray-500 mb-4">← Retour</button>
-            <h1 class="text-2xl font-bold mb-4 text-center text-blue-600">💳 Abonnement Motosu</h1>
+            <h1 class="text-2xl font-bold mb-2 text-center text-blue-600">💳 Abonnement Motosu</h1>
+            <p class="text-center slogan mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
             
             <div class="stat-orange rounded-xl p-6 text-center mb-6">
               <p class="text-lg opacity-90">Frais d'abonnement unique</p>
@@ -137,8 +146,15 @@
                 <li class="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
                   <span class="text-green-500 text-xl">✓</span>
                   <div>
-                    <p class="font-semibold">Accès illimité aux micro-tâches</p>
-                    <p class="text-sm text-gray-500">Gagnez jusqu'à 755 FCFA par jour en complétant des tâches</p>
+                    <p class="font-semibold">Accès aux micro-tâches rémunérées</p>
+                    <p class="text-sm text-gray-500">Sondages, vérifications, classifications...</p>
+                  </div>
+                </li>
+                <li class="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+                  <span class="text-purple-500 text-xl">✓</span>
+                  <div>
+                    <p class="font-semibold">Vidéos à regarder = Argent gagné</p>
+                    <p class="text-sm text-gray-500">YouTube et TikTok rémunérés</p>
                   </div>
                 </li>
                 <li class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
@@ -151,7 +167,7 @@
                 <li class="flex items-start gap-3 p-3 bg-orange-50 rounded-lg">
                   <span class="text-orange-500 text-xl">✓</span>
                   <div>
-                    <p class="font-semibold">Retraits rapides</p>
+                    <p class="font-semibold">Retraits faciles</p>
                     <p class="text-sm text-gray-500">Mobile Money dès 1000 FCFA, Crypto dès 10000 FCFA</p>
                   </div>
                 </li>
@@ -177,7 +193,8 @@
         <div class="min-h-screen p-4 bg-gray-100">
           <div class="card max-w-2xl mx-auto">
             <button onclick="navigate('login')" class="text-gray-500 mb-4">← Retour</button>
-            <h1 class="text-2xl font-bold mb-4 text-blue-600">À propos de Motosu Agencies</h1>
+            <h1 class="text-2xl font-bold mb-2 text-blue-600">À propos de Motosu Agencies</h1>
+            <p class="slogan mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
             <div class="prose">
               <p class="text-gray-700 leading-relaxed mb-4">
                 Motosu Agencies est une plateforme innovante dédiée à l'accompagnement des jeunes entrepreneurs et professionnels francophones en Afrique. Notre mission est de créer un environnement sécurisé et accessible où chacun peut développer son réseau, apprendre à travers des contenus interactifs et bénéficier d'opportunités de croissance progressive.
@@ -246,7 +263,8 @@
         <div class="min-h-screen bg-gray-100">
           ${renderNav()}
           <div class="p-4 max-w-4xl mx-auto">
-            <h1 class="text-xl font-bold mb-4">Bonjour, ${state.currentUser?.name?.split(' ')[0]} 👋</h1>
+            <h1 class="text-xl font-bold mb-1">Bonjour, ${state.currentUser?.name?.split(' ')[0]} 👋</h1>
+            <p class="text-sm slogan mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
             
             <div class="grid grid-cols-2 gap-4 mb-6">
               <div class="stat-blue rounded-xl p-4 text-center">
@@ -261,44 +279,52 @@
 
             <div class="card mb-4">
               <h2 class="font-bold mb-3">📊 Vos statistiques</h2>
-              <div class="grid grid-cols-3 gap-3 text-center">
+              <div class="grid grid-cols-4 gap-2 text-center">
                 <div class="bg-blue-50 p-3 rounded-lg">
-                  <p class="text-2xl font-bold text-blue-600">${state.referrals?.level1?.users?.length || 0}</p>
+                  <p class="text-xl font-bold text-blue-600">${state.referrals?.level1?.users?.length || 0}</p>
                   <p class="text-xs text-gray-500">Filleuls N1</p>
                 </div>
                 <div class="bg-green-50 p-3 rounded-lg">
-                  <p class="text-2xl font-bold text-green-600">${state.referrals?.level2?.users?.length || 0}</p>
+                  <p class="text-xl font-bold text-green-600">${state.referrals?.level2?.users?.length || 0}</p>
                   <p class="text-xs text-gray-500">Filleuls N2</p>
                 </div>
                 <div class="bg-purple-50 p-3 rounded-lg">
-                  <p class="text-2xl font-bold text-purple-600">${state.currentUser?.completedTasks?.length || 0}</p>
-                  <p class="text-xs text-gray-500">Tâches faites</p>
+                  <p class="text-xl font-bold text-purple-600">${state.currentUser?.completedTasks?.length || 0}</p>
+                  <p class="text-xs text-gray-500">Tâches</p>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-lg">
+                  <p class="text-xl font-bold text-orange-600">${state.currentUser?.watchedVideos?.length || 0}</p>
+                  <p class="text-xs text-gray-500">Vidéos</p>
                 </div>
               </div>
             </div>
 
-            <div class="card mb-4">
-              <h2 class="font-bold mb-3">🔗 Votre lien de parrainage</h2>
-              <div class="bg-gray-100 p-3 rounded-lg">
+            <div class="card mb-4 bg-gradient-to-r from-orange-100 to-yellow-100 border-2 border-orange-300">
+              <h2 class="font-bold mb-2 text-orange-700">🔥 Invitez vos amis!</h2>
+              <p class="text-sm text-gray-700 mb-3">Plus vous partagez, plus vous gagnez. Chaque ami validé = des commissions automatiques!</p>
+              <div class="bg-white p-3 rounded-lg">
                 <p class="text-xs text-gray-500 mb-1">Votre code :</p>
                 <div class="flex items-center justify-between">
                   <code class="text-lg font-bold text-blue-600">${state.currentUser?.referralCode}</code>
-                  <button onclick="copyReferral()" class="btn-primary text-sm py-2 px-4">📋 Copier le lien</button>
+                  <button onclick="copyReferral()" class="btn-orange text-sm py-2 px-4">📋 Copier le lien</button>
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-2">Gagnez 500 FCFA pour chaque filleul qui s'abonne!</p>
             </div>
 
             <div class="card">
               <h2 class="font-bold mb-3">💡 Actions rapides</h2>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-3 gap-3">
                 <button onclick="navigate('tasks')" class="bg-green-100 text-green-700 p-4 rounded-lg text-center hover:bg-green-200 transition">
                   <p class="text-2xl mb-1">📋</p>
-                  <p class="font-semibold text-sm">Faire des tâches</p>
+                  <p class="font-semibold text-xs">Tâches</p>
+                </button>
+                <button onclick="navigate('videos')" class="bg-purple-100 text-purple-700 p-4 rounded-lg text-center hover:bg-purple-200 transition">
+                  <p class="text-2xl mb-1">🎬</p>
+                  <p class="font-semibold text-xs">Vidéos</p>
                 </button>
                 <button onclick="navigate('referrals')" class="bg-blue-100 text-blue-700 p-4 rounded-lg text-center hover:bg-blue-200 transition">
                   <p class="text-2xl mb-1">👥</p>
-                  <p class="font-semibold text-sm">Parrainer</p>
+                  <p class="font-semibold text-xs">Parrainer</p>
                 </button>
               </div>
             </div>
@@ -375,26 +401,94 @@
         `;
       },
 
+      videos: () => {
+        const watchedVideos = state.currentUser?.watchedVideos || [];
+        const availableVideos = state.videos.filter(v => !watchedVideos.includes(v.id));
+        
+        return `
+          <div class="min-h-screen bg-gray-100">
+            ${renderNav()}
+            <div class="p-4 max-w-4xl mx-auto">
+              <h1 class="text-xl font-bold mb-2">🎬 Vidéos à regarder</h1>
+              <p class="text-sm text-gray-500 mb-4">Regardez des vidéos et gagnez de l'argent!</p>
+              
+              <div class="bg-purple-50 border border-purple-200 p-3 rounded-lg mb-4">
+                <p class="text-sm text-purple-800">
+                  <strong>💡 Conseil :</strong> Regardez la vidéo jusqu'à la fin pour valider vos gains!
+                </p>
+              </div>
+              
+              ${availableVideos.length === 0 ? `
+                <div class="card text-center py-8">
+                  <p class="text-4xl mb-3">🎉</p>
+                  <p class="font-bold text-green-600">Toutes les vidéos ont été regardées!</p>
+                  <p class="text-gray-500 text-sm">De nouvelles vidéos seront bientôt disponibles.</p>
+                </div>
+              ` : `
+                <div class="space-y-4">
+                  ${availableVideos.map(video => `
+                    <div class="video-card">
+                      <div class="p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                          <span class="text-xs px-2 py-1 rounded-full ${video.platform === 'youtube' ? 'bg-red-100 text-red-600' : 'bg-pink-100 text-pink-600'}">
+                            ${video.platform === 'youtube' ? '▶️ YouTube' : '🎵 TikTok'}
+                          </span>
+                          <span class="text-xs text-gray-500">${video.duration} min</span>
+                        </div>
+                        <h3 class="font-semibold">${video.title}</h3>
+                        <div class="flex justify-between items-center mt-3">
+                          <p class="font-bold text-green-600">+${video.reward} FCFA</p>
+                          <button onclick="openVideo('${video.id}')" class="btn-primary text-sm py-2 px-4">
+                            Regarder & Gagner
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+              
+              <div class="mt-6">
+                <h3 class="font-bold mb-3 text-gray-600">✓ Vidéos regardées (${watchedVideos.length})</h3>
+                <div class="space-y-2">
+                  ${state.videos.filter(v => watchedVideos.includes(v.id)).map(video => `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 flex justify-between items-center">
+                      <div>
+                        <p class="font-semibold text-green-700">${video.title}</p>
+                        <p class="text-xs text-green-600">+${video.reward} FCFA gagnés</p>
+                      </div>
+                      <span class="text-green-500 text-xl">✓</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      },
+
       referrals: () => `
         <div class="min-h-screen bg-gray-100">
           ${renderNav()}
           <div class="p-4 max-w-4xl mx-auto">
-            <h1 class="text-xl font-bold mb-4">👥 Programme Parrainage</h1>
+            <h1 class="text-xl font-bold mb-2">👥 Programme Parrainage</h1>
+            <p class="slogan text-sm mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
             
             <div class="card mb-4">
               <h2 class="font-bold mb-3">🔗 Votre lien de parrainage</h2>
-              <div class="bg-gradient-to-r from-blue-500 to-purple-500 p-4 rounded-lg text-white text-center">
+              <div class="bg-gradient-to-r from-orange-500 to-pink-500 p-4 rounded-lg text-white text-center">
                 <p class="text-sm opacity-80 mb-1">Votre code unique</p>
                 <p class="text-2xl font-bold mb-3">${state.currentUser?.referralCode}</p>
-                <button onclick="copyReferral()" class="bg-white text-blue-600 px-6 py-2 rounded-full font-semibold text-sm">
+                <button onclick="copyReferral()" class="bg-white text-orange-600 px-6 py-2 rounded-full font-semibold text-sm">
                   📋 Copier le lien complet
                 </button>
               </div>
             </div>
 
-            <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4">
+            <div class="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-orange-300 p-4 rounded-lg mb-4">
               <p class="text-sm text-orange-800">
-                <strong>💡 Astuce :</strong> Partagez votre lien sur WhatsApp, Facebook, TikTok et gagnez pour chaque inscription validée!
+                <strong>🔥 Partagez votre lien sur WhatsApp, Facebook, TikTok!</strong><br>
+                Plus vous invitez d'amis, plus vous gagnez. Ensemble, on va plus loin!
               </p>
             </div>
 
@@ -474,29 +568,44 @@
                 <p class="text-3xl font-bold">${state.currentUser?.earnings || 0} FCFA</p>
               </div>
 
-              <form id="withdrawForm">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Méthode de retrait</label>
-                <select id="withdrawMethod" class="input" onchange="updateWithdrawMin()">
-                  <option value="orange">Orange Money (min 1000 FCFA)</option>
-                  <option value="mtn">MTN Mobile Money (min 1000 FCFA)</option>
-                  <option value="wave">Wave (min 1000 FCFA)</option>
-                  <option value="moov">Moov Money (min 1000 FCFA)</option>
-                  <option value="crypto">Crypto USDT TRC20 (min 10000 FCFA)</option>
-                </select>
+              ${!state.referrals?.canWithdraw ? `
+                <div class="bg-orange-50 border-2 border-orange-300 p-4 rounded-lg mb-4">
+                  <p class="text-center text-orange-800 font-semibold mb-2">🔒 Retraits verrouillés</p>
+                  <p class="text-sm text-center text-orange-700">
+                    Invitez plus d'amis pour débloquer les retraits!<br>
+                    <span class="font-bold">"Partagez, Gagnez, Grandissez ensemble"</span>
+                  </p>
+                  <div class="mt-3 text-center">
+                    <button onclick="navigate('referrals')" class="btn-orange text-sm py-2 px-6">
+                      👥 Inviter des amis
+                    </button>
+                  </div>
+                </div>
+              ` : `
+                <form id="withdrawForm">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Méthode de retrait</label>
+                  <select id="withdrawMethod" class="input">
+                    <option value="orange">Orange Money (min 1000 FCFA)</option>
+                    <option value="mtn">MTN Mobile Money (min 1000 FCFA)</option>
+                    <option value="wave">Wave (min 1000 FCFA)</option>
+                    <option value="moov">Moov Money (min 1000 FCFA)</option>
+                    <option value="crypto">Crypto USDT TRC20 (min 10000 FCFA)</option>
+                  </select>
+                  
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Montant à retirer</label>
+                  <input type="number" id="withdrawAmount" class="input" placeholder="Montant en FCFA" min="1000" required>
+                  
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Numéro ou Adresse de réception</label>
+                  <input type="text" id="withdrawAccount" class="input" placeholder="+225 XX XX XX XX XX ou adresse USDT" required>
+                  
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Nom du titulaire</label>
+                  <input type="text" id="withdrawName" class="input" placeholder="Nom complet du compte" value="${state.currentUser?.name || ''}">
+                  
+                  <button type="submit" class="btn-orange w-full">Demander le retrait</button>
+                </form>
                 
-                <label class="block text-sm font-medium text-gray-700 mb-2">Montant à retirer</label>
-                <input type="number" id="withdrawAmount" class="input" placeholder="Montant en FCFA" min="1000" required>
-                
-                <label class="block text-sm font-medium text-gray-700 mb-2">Numéro ou Adresse de réception</label>
-                <input type="text" id="withdrawAccount" class="input" placeholder="+225 XX XX XX XX XX ou adresse USDT" required>
-                
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nom du titulaire</label>
-                <input type="text" id="withdrawName" class="input" placeholder="Nom complet du compte" value="${state.currentUser?.name || ''}">
-                
-                <button type="submit" class="btn-orange w-full">Demander le retrait</button>
-              </form>
-              
-              <p class="text-xs text-gray-500 text-center mt-3">⏱️ Traitement sous 24-48h ouvrées</p>
+                <p class="text-xs text-gray-500 text-center mt-3">⏱️ Traitement sous 24-48h ouvrées</p>
+              `}
             </div>
 
             <div class="card">
@@ -535,6 +644,7 @@
               <button onclick="setAdminTab('pending')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-pending">⏳ En attente</button>
               <button onclick="setAdminTab('users')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-users">👥 Utilisateurs</button>
               <button onclick="setAdminTab('withdrawals')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-withdrawals">💸 Retraits</button>
+              <button onclick="setAdminTab('videos')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-videos">🎬 Vidéos</button>
               <button onclick="setAdminTab('config')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-config">⚙️ Config</button>
             </div>
             
@@ -558,6 +668,7 @@
           <div class="flex border-t">
             <button onclick="navigate('dashboard')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'dashboard' ? 'tab-active' : 'text-gray-500'}">🏠 Accueil</button>
             <button onclick="navigate('tasks')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'tasks' ? 'tab-active' : 'text-gray-500'}">📋 Tâches</button>
+            <button onclick="navigate('videos')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'videos' ? 'tab-active' : 'text-gray-500'}">🎬 Vidéos</button>
             <button onclick="navigate('referrals')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'referrals' ? 'tab-active' : 'text-gray-500'}">👥 Parrainage</button>
             <button onclick="navigate('withdraw')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'withdraw' ? 'tab-active' : 'text-gray-500'}">💰 Retrait</button>
           </div>
@@ -611,11 +722,14 @@
       state.currentPage = page;
       
       if (state.currentUser && state.currentUser.status === 'validated') {
-        if (['dashboard', 'referrals'].includes(page)) {
+        if (['dashboard', 'referrals', 'withdraw'].includes(page)) {
           state.referrals = await api(`/api/referrals/${state.currentUser.id}`);
         }
         if (page === 'tasks') {
           state.tasks = await api('/api/tasks');
+        }
+        if (page === 'videos') {
+          state.videos = await api('/api/videos');
         }
         if (page === 'withdraw') {
           state.withdrawals = await api(`/api/withdrawals/user/${state.currentUser.id}`);
@@ -699,6 +813,9 @@
           
           if (res.error) {
             toast(res.error, 'error');
+            if (res.needMoreReferrals) {
+              navigate('referrals');
+            }
           } else {
             toast(res.message, 'success');
             state.currentUser = await api(`/api/user/${state.currentUser.id}`);
@@ -709,6 +826,96 @@
       
       if (state.currentPage === 'admin') {
         setAdminTab('stats');
+      }
+    }
+
+    // Vidéos
+    function openVideo(videoId) {
+      const video = state.videos.find(v => v.id === videoId);
+      if (!video) return;
+      
+      state.currentVideo = video;
+      const requiredTime = Math.ceil(video.duration * 60 * 0.8);
+      
+      const modal = $('#modal');
+      modal.innerHTML = `
+        <div class="modal" onclick="closeModal(event)">
+          <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <span class="text-xs px-2 py-1 rounded-full ${video.platform === 'youtube' ? 'bg-red-100 text-red-600' : 'bg-pink-100 text-pink-600'}">
+                  ${video.platform === 'youtube' ? '▶️ YouTube' : '🎵 TikTok'}
+                </span>
+                <h2 class="text-lg font-bold mt-2">${video.title}</h2>
+              </div>
+              <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <div class="video-container mb-4">
+              <iframe src="${video.url}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            
+            <div class="bg-purple-50 p-3 rounded-lg mb-4">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-semibold text-purple-800">⏱️ Temps de visionnage</span>
+                <span id="watchTimer" class="font-bold text-purple-600">0:00</span>
+              </div>
+              <div class="progress-bar">
+                <div id="watchProgress" class="progress-fill bg-purple-500" style="width: 0%"></div>
+              </div>
+              <p class="text-xs text-purple-600 mt-1">Regardez au moins ${Math.floor(requiredTime/60)}:${(requiredTime%60).toString().padStart(2,'0')} pour valider</p>
+            </div>
+            
+            <div class="flex gap-3">
+              <button onclick="closeModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold">Annuler</button>
+              <button id="validateVideoBtn" onclick="validateVideo('${video.id}')" class="flex-1 btn-success py-3" disabled>
+                Valider (+${video.reward} FCFA)
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Démarrer le timer
+      let watchTime = 0;
+      const totalTime = video.duration * 60;
+      
+      window.videoTimer = setInterval(() => {
+        watchTime++;
+        const minutes = Math.floor(watchTime / 60);
+        const seconds = watchTime % 60;
+        const timerEl = $('#watchTimer');
+        const progressEl = $('#watchProgress');
+        const btnEl = $('#validateVideoBtn');
+        
+        if (timerEl) {
+          timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          progressEl.style.width = `${Math.min(100, (watchTime / requiredTime) * 100)}%`;
+          
+          if (watchTime >= requiredTime) {
+            btnEl.disabled = false;
+            btnEl.classList.remove('opacity-50');
+          }
+        }
+      }, 1000);
+    }
+
+    async function validateVideo(videoId) {
+      clearInterval(window.videoTimer);
+      const video = state.videos.find(v => v.id === videoId);
+      
+      const res = await api(`/api/videos/${videoId}/watch`, 'POST', {
+        userId: state.currentUser.id,
+        watchTime: video.duration * 60
+      });
+      
+      if (res.error) {
+        toast(res.error, 'error');
+      } else {
+        toast(res.message, 'success');
+        closeModal();
+        state.currentUser = await api(`/api/user/${state.currentUser.id}`);
+        navigate('videos');
       }
     }
 
@@ -729,11 +936,11 @@
         content = `
           <div class="space-y-6" id="surveyQuestions">
             ${task.content.questions.map((q, i) => `
-              <div class="question-block">
+              <div class="question-block" data-question="${i}">
                 <p class="font-semibold mb-3 text-gray-800">${i + 1}. ${q.question}</p>
                 <div class="space-y-2">
                   ${q.options.map((opt, j) => `
-                    <button type="button" class="option-btn" data-question="${i}" data-value="${opt}" onclick="selectSurveyOption(this)">
+                    <button type="button" class="option-btn" data-question="${i}" data-value="${opt}" onclick="selectSurveyOption(this, ${i})">
                       ${opt}
                     </button>
                   `).join('')}
@@ -751,7 +958,7 @@
             ${task.content.items.map((item, i) => `
               <div class="check-item" data-index="${i}" onclick="toggleVerificationItem(this)">
                 <span class="flex-1">${item.text}</span>
-                <span class="checkmark hidden">✓</span>
+                <span class="checkmark hidden text-xl">✓</span>
               </div>
             `).join('')}
           </div>
@@ -763,8 +970,8 @@
           </div>
           <div class="space-y-3" id="classificationItems">
             ${task.content.items.map((item, i) => `
-              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span class="font-medium flex-1">${item.name}</span>
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
+                <span class="font-medium flex-1 text-sm">${item.name}</span>
                 <select class="category-select" data-index="${i}">
                   <option value="">Choisir...</option>
                   ${task.content.categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
@@ -796,7 +1003,7 @@
               <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             
-            <div class="mb-6 max-h-96 overflow-y-auto">
+            <div class="mb-6 max-h-80 overflow-y-auto">
               ${content}
             </div>
             
@@ -809,21 +1016,23 @@
       `;
     }
 
-    function selectSurveyOption(btn) {
-      const question = btn.dataset.question;
-      $$(`[data-question="${question}"]`).forEach(el => el.classList.remove('selected'));
+    function selectSurveyOption(btn, questionIndex) {
+      $$(`[data-question="${questionIndex}"].option-btn`).forEach(el => el.classList.remove('selected'));
       btn.classList.add('selected');
     }
 
     function toggleVerificationItem(item) {
       item.classList.toggle('selected');
-      item.querySelector('.checkmark').classList.toggle('hidden');
+      const checkmark = item.querySelector('.checkmark');
+      checkmark.classList.toggle('hidden');
     }
 
     function closeModal(event) {
       if (event && event.target !== event.currentTarget) return;
+      if (window.videoTimer) clearInterval(window.videoTimer);
       $('#modal').innerHTML = '';
       state.currentTask = null;
+      state.currentVideo = null;
     }
 
     async function submitTask(taskId) {
@@ -838,18 +1047,40 @@
           const selected = $(`.option-btn.selected[data-question="${i}"]`);
           answers.push(selected ? selected.dataset.value : null);
         });
+        
+        // Vérifier que toutes les questions ont une réponse
+        if (answers.some(a => a === null)) {
+          toast('Veuillez répondre à toutes les questions', 'error');
+          return;
+        }
       } else if (task.type === 'verification') {
         answers = [];
         $$('.check-item.selected').forEach(item => {
           answers.push(parseInt(item.dataset.index));
         });
+        
+        if (answers.length === 0) {
+          toast('Veuillez sélectionner au moins un élément', 'error');
+          return;
+        }
       } else if (task.type === 'classification') {
         answers = {};
+        let allFilled = true;
         $$('.category-select').forEach(sel => {
+          if (!sel.value) allFilled = false;
           answers[sel.dataset.index] = sel.value;
         });
+        
+        if (!allFilled) {
+          toast('Veuillez classifier tous les éléments', 'error');
+          return;
+        }
       } else if (task.type === 'transcription') {
         answers = $('#transcriptionText').value;
+        if (!answers || answers.trim().length < 10) {
+          toast('Veuillez saisir la transcription complète', 'error');
+          return;
+        }
       }
       
       const res = await api(`/api/tasks/${taskId}/complete`, 'POST', {
@@ -932,7 +1163,7 @@
     function copyReferral() {
       const link = `${window.location.origin}?ref=${state.currentUser.referralCode}`;
       navigator.clipboard.writeText(link);
-      toast('Lien de parrainage copié!', 'success');
+      toast('Lien de parrainage copié! Partagez-le!', 'success');
     }
 
     function logout() {
@@ -965,6 +1196,9 @@
       } else if (tab === 'withdrawals') {
         state.adminData.withdrawals = await api('/api/admin/withdrawals');
         content.innerHTML = renderAdminWithdrawals();
+      } else if (tab === 'videos') {
+        state.adminData.videos = await api('/api/admin/videos');
+        content.innerHTML = renderAdminVideos();
       } else if (tab === 'config') {
         state.adminData.config = await api('/api/admin/config');
         content.innerHTML = renderAdminConfig();
@@ -991,9 +1225,13 @@
             <p class="text-3xl font-bold text-purple-600">${s.pendingWithdrawals || 0}</p>
             <p class="text-gray-500 text-sm">Retraits en attente</p>
           </div>
-          <div class="card text-center col-span-2">
+          <div class="card text-center">
+            <p class="text-3xl font-bold text-pink-600">${s.videosCount || 0}</p>
+            <p class="text-gray-500 text-sm">Vidéos</p>
+          </div>
+          <div class="card text-center">
             <p class="text-3xl font-bold text-orange-600">${s.totalWithdrawals || 0} FCFA</p>
-            <p class="text-gray-500 text-sm">Total retraits approuvés</p>
+            <p class="text-gray-500 text-sm">Total retraits</p>
           </div>
         </div>
       `;
@@ -1040,7 +1278,7 @@
                 <div>
                   <p class="font-semibold">${u.name} ${u.isAdmin ? '👑' : ''}</p>
                   <p class="text-xs text-gray-500">${u.email}</p>
-                  <p class="text-xs text-gray-500">${u.earnings} FCFA gagnés • ${u.completedTasks?.length || 0} tâches</p>
+                  <p class="text-xs text-gray-500">${u.earnings} FCFA gagnés • ${u.completedTasks?.length || 0} tâches • ${u.watchedVideos?.length || 0} vidéos</p>
                 </div>
                 <span class="px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(u.status)}">${getStatusLabel(u.status)}</span>
               </div>
@@ -1077,6 +1315,47 @@
       `).join('');
     }
 
+    function renderAdminVideos() {
+      return `
+        <div class="card mb-4">
+          <h2 class="font-bold text-lg mb-4">➕ Ajouter une vidéo</h2>
+          <form id="addVideoForm">
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <select id="videoPlatform" class="input mb-0" required>
+                <option value="youtube">YouTube</option>
+                <option value="tiktok">TikTok</option>
+              </select>
+              <input type="number" id="videoDuration" class="input mb-0" placeholder="Durée (minutes)" min="1" required>
+            </div>
+            <input type="text" id="videoTitle" class="input" placeholder="Titre de la vidéo" required>
+            <input type="text" id="videoUrl" class="input" placeholder="URL de la vidéo (YouTube ou TikTok)" required>
+            <input type="number" id="videoReward" class="input" placeholder="Récompense (FCFA)" min="1" required>
+            <button type="submit" class="btn-primary w-full">Ajouter la vidéo</button>
+          </form>
+        </div>
+        
+        <div class="card">
+          <h2 class="font-bold text-lg mb-4">🎬 Vidéos existantes (${state.adminData.videos.length})</h2>
+          ${state.adminData.videos.length === 0 ? '<p class="text-gray-500 text-sm text-center py-4">Aucune vidéo</p>' : `
+            <div class="space-y-3">
+              ${state.adminData.videos.map(v => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <span class="text-xs px-2 py-1 rounded-full ${v.platform === 'youtube' ? 'bg-red-100 text-red-600' : 'bg-pink-100 text-pink-600'}">
+                      ${v.platform === 'youtube' ? 'YouTube' : 'TikTok'}
+                    </span>
+                    <p class="font-semibold mt-1">${v.title}</p>
+                    <p class="text-xs text-gray-500">${v.duration} min • ${v.reward} FCFA</p>
+                  </div>
+                  <button onclick="deleteVideo('${v.id}')" class="text-red-500 text-xl">🗑️</button>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
     function renderAdminConfig() {
       const config = state.adminData.config;
       return `
@@ -1100,6 +1379,7 @@
       `;
     }
 
+    // Admin functions
     function addPaymentNumber() {
       state.adminData.config.paymentNumbers.push({ operator: '', number: '', name: '' });
       $('#adminContent').innerHTML = renderAdminConfig();
@@ -1154,12 +1434,38 @@
       setAdminTab('withdrawals');
     }
 
+    async function deleteVideo(videoId) {
+      if (!confirm('Supprimer cette vidéo ?')) return;
+      await api(`/api/admin/videos/${videoId}`, 'DELETE');
+      toast('Vidéo supprimée', 'info');
+      setAdminTab('videos');
+    }
+
+    // Attach video form handler
+    document.addEventListener('submit', async function(e) {
+      if (e.target.id === 'addVideoForm') {
+        e.preventDefault();
+        const res = await api('/api/admin/videos', 'POST', {
+          platform: $('#videoPlatform').value,
+          title: $('#videoTitle').value,
+          url: $('#videoUrl').value,
+          duration: parseInt($('#videoDuration').value),
+          reward: parseInt($('#videoReward').value)
+        });
+        
+        if (res.error) {
+          toast(res.error, 'error');
+        } else {
+          toast('Vidéo ajoutée!', 'success');
+          setAdminTab('videos');
+        }
+      }
+    });
+
     // Init
     async function init() {
-      // Charger la configuration
       state.config = await api('/api/config');
       
-      // Vérifier code parrain dans l'URL
       const urlParams = new URLSearchParams(window.location.search);
       const ref = urlParams.get('ref');
       if (ref) {
@@ -1168,7 +1474,6 @@
         window.history.replaceState({}, '', '/');
       }
 
-      // Vérifier session existante
       const userId = localStorage.getItem('userId');
       if (userId) {
         try {
