@@ -468,19 +468,31 @@ app.post('/api/payment/confirm', (req, res) => {
   res.json({ success: true });
 });
 
-// API: Notification CinetPay
+// API: Notification CinetPay (POST et GET)
 app.post('/api/payment/notify', (req, res) => {
   console.log('CinetPay notification:', req.body);
   res.json({ success: true });
 });
 
-// API: Retour paiement réussi
+app.get('/api/payment/notify', (req, res) => {
+  res.json({ success: true, message: 'Notification endpoint active' });
+});
+
+// API: Retour paiement réussi (GET et POST)
 app.get('/api/payment/return', (req, res) => {
   res.redirect('/');
 });
 
-// API: Annulation paiement
+app.post('/api/payment/return', (req, res) => {
+  res.redirect('/');
+});
+
+// API: Annulation paiement (GET et POST)
 app.get('/api/payment/cancel', (req, res) => {
+  res.redirect('/');
+});
+
+app.post('/api/payment/cancel', (req, res) => {
   res.redirect('/');
 });
 
