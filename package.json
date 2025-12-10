@@ -1,7 +1,6 @@
 {
   "name": "motosu-agencies",
   "version": "1.0.0",
-<<<<<<< HEAD
   "description": "Motosu Agencies - Plateforme de parrainage et micro-tâches",
   "main": "server.js",
   "scripts": {
@@ -14,7 +13,6 @@
     "node": ">=18.0.0"
   }
 }
-=======
   "description": "Plateforme Motosu Agencies - Parrainage et activités vidéo",
   "main": "server.js",
   "engines": {
@@ -48,4 +46,3 @@
   },
   "homepage": "https://github.com/princefreto-bot/motosu#readme"
 }
->>>>>>> 4dd5d4922cb45bf59780bf746c774676dd286ab2
