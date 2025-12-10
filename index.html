@@ -5,31 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Motosu Agencies</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <script src="https://cdn.cinetpay.com/seamless/main.js"></script>
   <style>
     .toast{position:fixed;top:20px;right:20px;padding:15px 25px;border-radius:8px;color:white;z-index:9999;animation:slideIn .3s ease}
     @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
     .toast-success{background:#10b981}.toast-error{background:#ef4444}.toast-info{background:#3b82f6}
-    .tab-active{border-bottom:3px solid #3b82f6;color:#3b82f6}
+    .tab-active{border-bottom:3px solid #3b82f6;color:#3b82f6;font-weight:600}
     .card{background:white;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.1);padding:20px}
     .btn-primary{background:#3b82f6;color:white;padding:12px 24px;border-radius:8px;font-weight:600;transition:all .2s}
     .btn-primary:hover{background:#2563eb}
     .btn-success{background:#10b981;color:white;padding:12px 24px;border-radius:8px;font-weight:600}
+    .btn-success:hover{background:#059669}
     .btn-orange{background:#f97316;color:white;padding:12px 24px;border-radius:8px;font-weight:600}
+    .btn-orange:hover{background:#ea580c}
     .btn-danger{background:#ef4444;color:white;padding:10px 20px;border-radius:8px}
+    .btn-danger:hover{background:#dc2626}
     .input{width:100%;padding:12px;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:12px}
-    .input:focus{outline:none;border-color:#3b82f6}
+    .input:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
     .stat-blue{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white}
     .stat-orange{background:linear-gradient(135deg,#f97316,#ea580c);color:white}
     .stat-green{background:linear-gradient(135deg,#10b981,#059669);color:white}
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000}
-    .modal-content{background:white;border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
-    .radio-option{display:block;padding:10px 15px;margin:5px 0;background:#f3f4f6;border-radius:8px;cursor:pointer;transition:all .2s}
-    .radio-option:hover{background:#e5e7eb}
-    .radio-option.selected{background:#3b82f6;color:white}
-    .checkbox-item{display:flex;align-items:center;padding:10px 15px;margin:5px 0;background:#f3f4f6;border-radius:8px;cursor:pointer}
-    .checkbox-item:hover{background:#e5e7eb}
-    .checkbox-item.selected{background:#10b981;color:white}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
+    .modal-content{background:white;border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto}
+    .option-btn{display:block;width:100%;padding:12px 16px;margin:8px 0;background:#f3f4f6;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:all .2s;text-align:left}
+    .option-btn:hover{background:#e5e7eb}
+    .option-btn.selected{background:#3b82f6;color:white;border-color:#1d4ed8}
+    .check-item{display:flex;align-items:center;padding:12px 16px;margin:8px 0;background:#f3f4f6;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:all .2s}
+    .check-item:hover{background:#e5e7eb}
+    .check-item.selected{background:#10b981;color:white;border-color:#059669}
+    .category-select{padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:white}
+    .progress-bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden}
+    .progress-fill{height:100%;background:#10b981;transition:width .3s}
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -41,22 +46,27 @@
     let state = {
       currentUser: null,
       currentPage: 'login',
+      config: { paymentNumbers: [], subscriptionAmount: 4000 },
       tasks: [],
       currentTask: null,
-      taskAnswers: [],
       referrals: null,
       withdrawals: [],
-      adminData: { pending: [], users: [], withdrawals: [], tasks: [], payments: [], stats: {} }
+      adminData: { pending: [], users: [], withdrawals: [], tasks: [], payments: [], stats: {}, config: {} }
     };
 
     // Utilitaires
     const $ = (sel) => document.querySelector(sel);
     const $$ = (sel) => document.querySelectorAll(sel);
     const api = async (url, method = 'GET', data = null) => {
-      const opts = { method, headers: { 'Content-Type': 'application/json' } };
-      if (data) opts.body = JSON.stringify(data);
-      const res = await fetch(url, opts);
-      return res.json();
+      try {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (data) opts.body = JSON.stringify(data);
+        const res = await fetch(url, opts);
+        return res.json();
+      } catch (e) {
+        console.error('API Error:', e);
+        return { error: 'Erreur de connexion' };
+      }
     };
 
     const toast = (msg, type = 'info') => {
@@ -64,152 +74,170 @@
       div.className = `toast toast-${type}`;
       div.textContent = msg;
       document.body.appendChild(div);
-      setTimeout(() => div.remove(), 3000);
+      setTimeout(() => div.remove(), 4000);
     };
 
     // Pages
     const pages = {
       login: () => `
-        <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-500 to-purple-600">
           <div class="card w-full max-w-md">
-            <h1 class="text-2xl font-bold text-center mb-6 text-blue-600">🚀 Motosu Agencies</h1>
+            <div class="text-center mb-6">
+              <h1 class="text-3xl font-bold text-blue-600">🚀 Motosu Agencies</h1>
+              <p class="text-gray-500 mt-2">Plateforme de gains en ligne</p>
+            </div>
             <form id="loginForm">
               <input type="email" class="input" placeholder="Email" id="loginEmail" required>
               <input type="password" class="input" placeholder="Mot de passe" id="loginPassword" required>
               <button type="submit" class="btn-primary w-full">Se connecter</button>
             </form>
             <p class="text-center mt-4 text-gray-600">
-              Pas de compte ? <a href="#" onclick="navigate('register')" class="text-blue-600">S'inscrire</a>
+              Pas de compte ? <a href="#" onclick="navigate('register')" class="text-blue-600 font-semibold">S'inscrire</a>
             </p>
             <hr class="my-4">
-            <div class="flex gap-2">
-              <button onclick="navigate('subscription')" class="flex-1 btn-orange text-sm">💳 Abonnement</button>
-              <button onclick="navigate('about')" class="flex-1 text-gray-500 border rounded-lg py-2">À propos</button>
-            </div>
+            <button onclick="navigate('subscription')" class="w-full btn-orange mb-3">💳 Voir les offres d'abonnement</button>
+            <button onclick="navigate('about')" class="w-full text-gray-500 border border-gray-300 rounded-lg py-3">À propos de nous</button>
           </div>
         </div>
       `,
 
       register: () => `
-        <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-green-500 to-blue-600">
           <div class="card w-full max-w-md">
             <h1 class="text-2xl font-bold text-center mb-6 text-blue-600">Créer un compte</h1>
             <form id="registerForm">
               <input type="text" class="input" placeholder="Nom complet" id="regName" required>
               <input type="email" class="input" placeholder="Email" id="regEmail" required>
-              <input type="tel" class="input" placeholder="Téléphone (ex: +225 07 XX XX XX XX)" id="regPhone" required>
-              <input type="password" class="input" placeholder="Mot de passe" id="regPassword" required>
+              <input type="tel" class="input" placeholder="Téléphone (+225 XX XX XX XX XX)" id="regPhone" required>
+              <input type="password" class="input" placeholder="Mot de passe (min. 6 caractères)" id="regPassword" minlength="6" required>
               <input type="text" class="input" placeholder="Code parrain (optionnel)" id="regReferral" value="${localStorage.getItem('referralCode') || ''}">
-              <button type="submit" class="btn-primary w-full">S'inscrire</button>
+              <button type="submit" class="btn-success w-full">S'inscrire gratuitement</button>
             </form>
             <p class="text-center mt-4 text-gray-600">
-              Déjà un compte ? <a href="#" onclick="navigate('login')" class="text-blue-600">Se connecter</a>
+              Déjà un compte ? <a href="#" onclick="navigate('login')" class="text-blue-600 font-semibold">Se connecter</a>
             </p>
           </div>
         </div>
       `,
 
       subscription: () => `
-        <div class="min-h-screen p-4">
+        <div class="min-h-screen p-4 bg-gray-100">
           <div class="card max-w-2xl mx-auto">
+            <button onclick="navigate('login')" class="text-gray-500 mb-4">← Retour</button>
             <h1 class="text-2xl font-bold mb-4 text-center text-blue-600">💳 Abonnement Motosu</h1>
             
             <div class="stat-orange rounded-xl p-6 text-center mb-6">
               <p class="text-lg opacity-90">Frais d'abonnement unique</p>
-              <p class="text-4xl font-bold">4 000 FCFA</p>
+              <p class="text-4xl font-bold">${state.config.subscriptionAmount || 4000} FCFA</p>
             </div>
 
             <div class="mb-6">
               <h2 class="font-bold text-lg mb-3">✅ Ce que vous obtenez :</h2>
               <ul class="space-y-3">
-                <li class="flex items-start gap-3">
+                <li class="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
                   <span class="text-green-500 text-xl">✓</span>
                   <div>
                     <p class="font-semibold">Accès illimité aux micro-tâches</p>
                     <p class="text-sm text-gray-500">Gagnez jusqu'à 755 FCFA par jour en complétant des tâches</p>
                   </div>
                 </li>
-                <li class="flex items-start gap-3">
-                  <span class="text-green-500 text-xl">✓</span>
+                <li class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                  <span class="text-blue-500 text-xl">✓</span>
                   <div>
                     <p class="font-semibold">Programme de parrainage 3 niveaux</p>
                     <p class="text-sm text-gray-500">500 FCFA (N1) + 200 FCFA (N2) + 100 FCFA (N3) par filleul</p>
                   </div>
                 </li>
-                <li class="flex items-start gap-3">
-                  <span class="text-green-500 text-xl">✓</span>
+                <li class="flex items-start gap-3 p-3 bg-orange-50 rounded-lg">
+                  <span class="text-orange-500 text-xl">✓</span>
                   <div>
                     <p class="font-semibold">Retraits rapides</p>
                     <p class="text-sm text-gray-500">Mobile Money dès 1000 FCFA, Crypto dès 10000 FCFA</p>
-                  </div>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span class="text-green-500 text-xl">✓</span>
-                  <div>
-                    <p class="font-semibold">Support dédié</p>
-                    <p class="text-sm text-gray-500">Assistance personnalisée pour tous les membres</p>
                   </div>
                 </li>
               </ul>
             </div>
 
             <div class="bg-blue-50 p-4 rounded-lg mb-6">
-              <h3 class="font-bold text-blue-600 mb-2">💡 Comment ça marche ?</h3>
-              <ol class="text-sm text-gray-700 space-y-1">
+              <h3 class="font-bold text-blue-600 mb-2">💡 Comment s'abonner ?</h3>
+              <ol class="text-sm text-gray-700 space-y-2">
                 <li>1. Inscrivez-vous gratuitement</li>
-                <li>2. Payez l'abonnement de 4000 FCFA via Mobile Money</li>
-                <li>3. Votre compte est activé instantanément</li>
-                <li>4. Commencez à gagner avec les tâches et le parrainage</li>
+                <li>2. Effectuez le dépôt de ${state.config.subscriptionAmount || 4000} FCFA via Mobile Money</li>
+                <li>3. Envoyez la capture d'écran du paiement</li>
+                <li>4. Votre compte est activé sous 24h</li>
               </ol>
             </div>
 
-            <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6">
-              <p class="text-sm text-yellow-800">
-                <strong>⚡ Paiement sécurisé</strong> via CinetPay (Orange Money, MTN Money, Moov Money, Wave)
-              </p>
-            </div>
-
-            <button onclick="navigate('register')" class="btn-primary w-full mb-3">Créer un compte</button>
-            <button onclick="navigate('login')" class="w-full text-center text-gray-500">Déjà inscrit ? Se connecter</button>
+            <button onclick="navigate('register')" class="btn-primary w-full mb-3">Créer un compte maintenant</button>
           </div>
         </div>
       `,
 
       about: () => `
-        <div class="min-h-screen p-4">
+        <div class="min-h-screen p-4 bg-gray-100">
           <div class="card max-w-2xl mx-auto">
+            <button onclick="navigate('login')" class="text-gray-500 mb-4">← Retour</button>
             <h1 class="text-2xl font-bold mb-4 text-blue-600">À propos de Motosu Agencies</h1>
-            <p class="text-gray-700 leading-relaxed mb-4">
-              Motosu Agencies est une plateforme innovante dédiée à l'accompagnement des jeunes entrepreneurs et professionnels francophones en Afrique. Notre mission est de créer un environnement sécurisé et accessible où chacun peut développer son réseau, apprendre à travers des contenus interactifs et bénéficier d'opportunités de croissance progressive.
-            </p>
-            <p class="text-gray-700 leading-relaxed mb-4">
-              Nous croyons à l'importance de l'engagement et de la persévérance : chaque action sur notre plateforme contribue à la progression personnelle et professionnelle de nos utilisateurs.
-            </p>
-            <p class="text-gray-700 leading-relaxed mb-6">
-              Notre équipe, basée en Afrique et en Europe, veille à ce que l'expérience utilisateur soit simple, sécurisée et adaptée aux besoins d'une communauté mobile-first. Rejoignez-nous et découvrez comment votre engagement peut vous permettre de progresser.
-            </p>
-            <button onclick="navigate('login')" class="btn-primary">Retour</button>
+            <div class="prose">
+              <p class="text-gray-700 leading-relaxed mb-4">
+                Motosu Agencies est une plateforme innovante dédiée à l'accompagnement des jeunes entrepreneurs et professionnels francophones en Afrique. Notre mission est de créer un environnement sécurisé et accessible où chacun peut développer son réseau, apprendre à travers des contenus interactifs et bénéficier d'opportunités de croissance progressive.
+              </p>
+              <p class="text-gray-700 leading-relaxed mb-4">
+                Nous croyons à l'importance de l'engagement et de la persévérance : chaque action sur notre plateforme contribue à la progression personnelle et professionnelle de nos utilisateurs.
+              </p>
+              <p class="text-gray-700 leading-relaxed mb-6">
+                Notre équipe, basée en Afrique et en Europe, veille à ce que l'expérience utilisateur soit simple, sécurisée et adaptée aux besoins d'une communauté mobile-first. Rejoignez-nous et découvrez comment votre engagement peut vous permettre de progresser.
+              </p>
+            </div>
           </div>
         </div>
       `,
 
       pending: () => `
-        <div class="min-h-screen p-4">
-          <div class="card max-w-md mx-auto text-center">
-            <div class="text-6xl mb-4">⏳</div>
-            <h1 class="text-xl font-bold mb-2 text-orange-600">Compte de recharge - Compte inactif</h1>
-            <p class="text-gray-600 mb-4">Veuillez vous abonner. Utilisez le numéro <strong>${state.currentUser?.phone || ''}</strong> pour le dépôt.</p>
+        <div class="min-h-screen p-4 bg-gray-100">
+          <div class="card max-w-lg mx-auto">
+            <div class="text-center mb-6">
+              <div class="text-6xl mb-4">⏳</div>
+              <h1 class="text-xl font-bold text-orange-600">Compte de recharge - Compte inactif</h1>
+              <p class="text-gray-600 mt-2">Veuillez vous abonner. Utilisez le numéro <strong>${state.currentUser?.phone || ''}</strong> pour le dépôt.</p>
+            </div>
             
-            <div class="bg-gray-50 p-4 rounded-lg mb-4 text-left">
-              <p class="text-sm text-gray-600 mb-2">💰 Montant : <strong>4 000 FCFA</strong></p>
-              <p class="text-sm text-gray-600">📱 Méthodes : Orange Money, MTN, Wave, Moov</p>
+            <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4">
+              <p class="font-bold text-orange-800 text-center text-lg">${state.config.subscriptionAmount || 4000} FCFA</p>
             </div>
 
-            <button onclick="payWithCinetPay()" class="btn-orange w-full mb-4">
-              💳 Payer 4000 FCFA avec Mobile Money
-            </button>
-            <p class="text-sm text-gray-500 mb-4">Le paiement active votre compte instantanément.</p>
-            <button onclick="logout()" class="text-red-500">Déconnexion</button>
+            <div class="mb-6">
+              <h3 class="font-bold mb-3">📱 Numéros de paiement :</h3>
+              <div class="space-y-2">
+                ${(state.config.paymentNumbers || []).map(p => `
+                  <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p class="font-semibold">${p.operator}</p>
+                      <p class="text-sm text-gray-500">${p.name}</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="font-mono font-bold text-blue-600">${p.number}</p>
+                      <button onclick="copyNumber('${p.number}')" class="text-xs text-blue-500">📋 Copier</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="bg-blue-50 p-4 rounded-lg mb-6">
+              <h3 class="font-bold text-blue-600 mb-2">📝 Après votre paiement :</h3>
+              <p class="text-sm text-gray-700">Envoyez une capture d'écran de la confirmation de paiement pour activer votre compte.</p>
+            </div>
+
+            <button onclick="openPaymentProof()" class="btn-orange w-full mb-3">📤 Envoyer ma preuve de paiement</button>
+            
+            ${state.currentUser?.status === 'pending_payment' ? `
+              <div class="bg-green-50 border border-green-200 p-3 rounded-lg text-center mb-3">
+                <p class="text-green-700 text-sm">✓ Preuve envoyée - En attente de validation</p>
+              </div>
+            ` : ''}
+            
+            <button onclick="logout()" class="w-full text-red-500 py-2">Déconnexion</button>
           </div>
         </div>
       `,
@@ -218,7 +246,7 @@
         <div class="min-h-screen bg-gray-100">
           ${renderNav()}
           <div class="p-4 max-w-4xl mx-auto">
-            <h1 class="text-xl font-bold mb-4">Bonjour, ${state.currentUser?.name} 👋</h1>
+            <h1 class="text-xl font-bold mb-4">Bonjour, ${state.currentUser?.name?.split(' ')[0]} 👋</h1>
             
             <div class="grid grid-cols-2 gap-4 mb-6">
               <div class="stat-blue rounded-xl p-4 text-center">
@@ -232,42 +260,45 @@
             </div>
 
             <div class="card mb-4">
-              <h2 class="font-bold mb-3">📊 Statistiques</h2>
-              <div class="grid grid-cols-3 gap-2 text-center text-sm">
-                <div class="bg-gray-50 p-3 rounded-lg">
-                  <p class="text-xl font-bold text-blue-600">${state.referrals?.level1?.users?.length || 0}</p>
-                  <p class="text-gray-500">Filleuls N1</p>
+              <h2 class="font-bold mb-3">📊 Vos statistiques</h2>
+              <div class="grid grid-cols-3 gap-3 text-center">
+                <div class="bg-blue-50 p-3 rounded-lg">
+                  <p class="text-2xl font-bold text-blue-600">${state.referrals?.level1?.users?.length || 0}</p>
+                  <p class="text-xs text-gray-500">Filleuls N1</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg">
-                  <p class="text-xl font-bold text-green-600">${state.referrals?.level2?.users?.length || 0}</p>
-                  <p class="text-gray-500">Filleuls N2</p>
+                <div class="bg-green-50 p-3 rounded-lg">
+                  <p class="text-2xl font-bold text-green-600">${state.referrals?.level2?.users?.length || 0}</p>
+                  <p class="text-xs text-gray-500">Filleuls N2</p>
                 </div>
-                <div class="bg-gray-50 p-3 rounded-lg">
-                  <p class="text-xl font-bold text-purple-600">${state.currentUser?.completedTasks?.length || 0}</p>
-                  <p class="text-gray-500">Tâches</p>
+                <div class="bg-purple-50 p-3 rounded-lg">
+                  <p class="text-2xl font-bold text-purple-600">${state.currentUser?.completedTasks?.length || 0}</p>
+                  <p class="text-xs text-gray-500">Tâches faites</p>
                 </div>
               </div>
             </div>
 
             <div class="card mb-4">
               <h2 class="font-bold mb-3">🔗 Votre lien de parrainage</h2>
-              <div class="bg-gray-100 p-3 rounded-lg flex items-center justify-between">
-                <code class="text-sm text-blue-600">${state.currentUser?.referralCode}</code>
-                <button onclick="copyReferral()" class="text-blue-600 text-sm font-bold">📋 Copier</button>
+              <div class="bg-gray-100 p-3 rounded-lg">
+                <p class="text-xs text-gray-500 mb-1">Votre code :</p>
+                <div class="flex items-center justify-between">
+                  <code class="text-lg font-bold text-blue-600">${state.currentUser?.referralCode}</code>
+                  <button onclick="copyReferral()" class="btn-primary text-sm py-2 px-4">📋 Copier le lien</button>
+                </div>
               </div>
-              <p class="text-xs text-gray-500 mt-2">Partagez ce code et gagnez 500 FCFA par filleul validé!</p>
+              <p class="text-xs text-gray-500 mt-2">Gagnez 500 FCFA pour chaque filleul qui s'abonne!</p>
             </div>
 
             <div class="card">
               <h2 class="font-bold mb-3">💡 Actions rapides</h2>
               <div class="grid grid-cols-2 gap-3">
-                <button onclick="navigate('tasks')" class="bg-green-100 text-green-700 p-4 rounded-lg text-center">
-                  <p class="text-2xl">📋</p>
-                  <p class="font-semibold">Faire des tâches</p>
+                <button onclick="navigate('tasks')" class="bg-green-100 text-green-700 p-4 rounded-lg text-center hover:bg-green-200 transition">
+                  <p class="text-2xl mb-1">📋</p>
+                  <p class="font-semibold text-sm">Faire des tâches</p>
                 </button>
-                <button onclick="navigate('referrals')" class="bg-blue-100 text-blue-700 p-4 rounded-lg text-center">
-                  <p class="text-2xl">👥</p>
-                  <p class="font-semibold">Parrainer</p>
+                <button onclick="navigate('referrals')" class="bg-blue-100 text-blue-700 p-4 rounded-lg text-center hover:bg-blue-200 transition">
+                  <p class="text-2xl mb-1">👥</p>
+                  <p class="font-semibold text-sm">Parrainer</p>
                 </button>
               </div>
             </div>
@@ -275,60 +306,95 @@
         </div>
       `,
 
-      tasks: () => `
-        <div class="min-h-screen bg-gray-100">
-          ${renderNav()}
-          <div class="p-4 max-w-4xl mx-auto">
-            <h1 class="text-xl font-bold mb-2">📋 Micro-Tâches</h1>
-            <p class="text-sm text-gray-500 mb-4">Complétez des tâches réelles et gagnez de l'argent. Max 10 tâches/jour.</p>
-            
-            <div class="bg-green-100 text-green-800 p-3 rounded-lg mb-4 text-sm">
-              <strong>Aujourd'hui :</strong> ${state.currentUser?.tasksCompletedToday?.length || 0}/10 tâches complétées
-            </div>
-            
-            <div class="space-y-3">
-              ${state.tasks.map(task => `
-                <div class="card">
-                  <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                      <span class="text-xs px-2 py-1 rounded-full ${getTaskTypeColor(task.type)}">${getTaskTypeLabel(task.type)}</span>
-                      <h3 class="font-semibold mt-2">${task.title}</h3>
-                      <p class="text-sm text-gray-500 mt-1">${task.description || ''}</p>
-                    </div>
-                    <div class="text-right ml-4">
-                      <p class="font-bold text-green-600 text-lg">${task.reward} FCFA</p>
-                    </div>
-                  </div>
-                  <div class="mt-3 pt-3 border-t">
-                    ${state.currentUser?.completedTasks?.includes(task.id) 
-                      ? '<span class="text-green-600 font-semibold">✓ Tâche complétée</span>'
-                      : `<button onclick="openTask('${task.id}')" class="btn-success w-full text-sm py-2">Commencer la tâche</button>`
-                    }
-                  </div>
+      tasks: () => {
+        const completedToday = state.currentUser?.tasksCompletedToday?.length || 0;
+        const availableTasks = state.tasks.filter(t => !state.currentUser?.completedTasks?.includes(t.id));
+        
+        return `
+          <div class="min-h-screen bg-gray-100">
+            ${renderNav()}
+            <div class="p-4 max-w-4xl mx-auto">
+              <h1 class="text-xl font-bold mb-2">📋 Micro-Tâches</h1>
+              <p class="text-sm text-gray-500 mb-4">Complétez des tâches et gagnez de l'argent réel!</p>
+              
+              <div class="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-semibold">Aujourd'hui</span>
+                  <span class="text-blue-600 font-bold">${completedToday}/10 tâches</span>
                 </div>
-              `).join('')}
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: ${completedToday * 10}%"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">${10 - completedToday} tâches restantes aujourd'hui</p>
+              </div>
+              
+              ${availableTasks.length === 0 ? `
+                <div class="card text-center py-8">
+                  <p class="text-4xl mb-3">🎉</p>
+                  <p class="font-bold text-green-600">Toutes les tâches sont complétées!</p>
+                  <p class="text-gray-500 text-sm">Revenez plus tard pour de nouvelles tâches.</p>
+                </div>
+              ` : `
+                <div class="space-y-3">
+                  ${availableTasks.map(task => `
+                    <div class="card hover:shadow-lg transition">
+                      <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                          <span class="text-xs px-2 py-1 rounded-full ${getTaskTypeColor(task.type)}">${getTaskTypeLabel(task.type)}</span>
+                          <h3 class="font-semibold mt-2">${task.title}</h3>
+                          <p class="text-sm text-gray-500 mt-1">${task.description}</p>
+                        </div>
+                        <div class="text-right ml-4">
+                          <p class="font-bold text-green-600 text-lg">+${task.reward} FCFA</p>
+                        </div>
+                      </div>
+                      <button onclick="openTask('${task.id}')" class="btn-success w-full mt-4 text-sm py-3">
+                        Commencer cette tâche
+                      </button>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+              
+              <div class="mt-6">
+                <h3 class="font-bold mb-3 text-gray-600">✓ Tâches complétées (${state.currentUser?.completedTasks?.length || 0})</h3>
+                <div class="space-y-2">
+                  ${state.tasks.filter(t => state.currentUser?.completedTasks?.includes(t.id)).map(task => `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-3 flex justify-between items-center">
+                      <div>
+                        <p class="font-semibold text-green-700">${task.title}</p>
+                        <p class="text-xs text-green-600">+${task.reward} FCFA gagnés</p>
+                      </div>
+                      <span class="text-green-500 text-xl">✓</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      `,
+        `;
+      },
 
       referrals: () => `
         <div class="min-h-screen bg-gray-100">
           ${renderNav()}
           <div class="p-4 max-w-4xl mx-auto">
-            <h1 class="text-xl font-bold mb-4">👥 Parrainage Megatrend</h1>
+            <h1 class="text-xl font-bold mb-4">👥 Programme Parrainage</h1>
             
             <div class="card mb-4">
-              <h2 class="font-bold mb-3">Votre code parrain</h2>
-              <div class="bg-blue-100 p-4 rounded-lg text-center">
-                <p class="text-2xl font-bold text-blue-600">${state.currentUser?.referralCode}</p>
-                <button onclick="copyReferral()" class="text-blue-600 mt-2 text-sm font-semibold">📋 Copier le lien complet</button>
+              <h2 class="font-bold mb-3">🔗 Votre lien de parrainage</h2>
+              <div class="bg-gradient-to-r from-blue-500 to-purple-500 p-4 rounded-lg text-white text-center">
+                <p class="text-sm opacity-80 mb-1">Votre code unique</p>
+                <p class="text-2xl font-bold mb-3">${state.currentUser?.referralCode}</p>
+                <button onclick="copyReferral()" class="bg-white text-blue-600 px-6 py-2 rounded-full font-semibold text-sm">
+                  📋 Copier le lien complet
+                </button>
               </div>
             </div>
 
             <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4">
               <p class="text-sm text-orange-800">
-                <strong>💡 Astuce :</strong> Partagez votre lien sur WhatsApp, Facebook et avec vos amis pour maximiser vos gains!
+                <strong>💡 Astuce :</strong> Partagez votre lien sur WhatsApp, Facebook, TikTok et gagnez pour chaque inscription validée!
               </p>
             </div>
 
@@ -336,20 +402,21 @@
               <div class="card border-l-4 border-green-500">
                 <div class="flex justify-between items-center">
                   <div>
-                    <h3 class="font-bold text-green-600">🥇 Niveau 1 (Direct)</h3>
+                    <h3 class="font-bold text-green-600">🥇 Niveau 1 (Filleuls directs)</h3>
                     <p class="text-sm text-gray-500">500 FCFA par filleul validé</p>
                   </div>
                   <div class="text-right">
-                    <p class="text-2xl font-bold">${state.referrals?.level1?.users?.length || 0}</p>
+                    <p class="text-3xl font-bold">${state.referrals?.level1?.users?.length || 0}</p>
                     <p class="text-green-600 font-bold">${state.referrals?.level1?.total || 0} FCFA</p>
                   </div>
                 </div>
-                ${state.referrals?.level1?.users?.length > 0 ? `
+                ${(state.referrals?.level1?.users?.length > 0) ? `
                   <div class="mt-3 pt-3 border-t">
-                    <p class="text-xs text-gray-500 mb-2">Vos filleuls :</p>
-                    <div class="flex flex-wrap gap-1">
+                    <div class="flex flex-wrap gap-2">
                       ${state.referrals.level1.users.map(u => `
-                        <span class="text-xs bg-gray-100 px-2 py-1 rounded">${u.name} ${u.status === 'validated' ? '✓' : '⏳'}</span>
+                        <span class="text-xs px-2 py-1 rounded-full ${u.status === 'validated' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+                          ${u.name} ${u.status === 'validated' ? '✓' : '⏳'}
+                        </span>
                       `).join('')}
                     </div>
                   </div>
@@ -363,7 +430,7 @@
                     <p class="text-sm text-gray-500">200 FCFA par filleul validé</p>
                   </div>
                   <div class="text-right">
-                    <p class="text-2xl font-bold">${state.referrals?.level2?.users?.length || 0}</p>
+                    <p class="text-3xl font-bold">${state.referrals?.level2?.users?.length || 0}</p>
                     <p class="text-blue-600 font-bold">${state.referrals?.level2?.total || 0} FCFA</p>
                   </div>
                 </div>
@@ -376,18 +443,20 @@
                     <p class="text-sm text-gray-500">100 FCFA par filleul validé</p>
                   </div>
                   <div class="text-right">
-                    <p class="text-2xl font-bold">${state.referrals?.level3?.users?.length || 0}</p>
+                    <p class="text-3xl font-bold">${state.referrals?.level3?.users?.length || 0}</p>
                     <p class="text-purple-600 font-bold">${state.referrals?.level3?.total || 0} FCFA</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="card mt-4">
-              <h3 class="font-bold mb-2">📊 Total des gains parrainage</h3>
-              <p class="text-2xl font-bold text-orange-600">
-                ${(state.referrals?.level1?.total || 0) + (state.referrals?.level2?.total || 0) + (state.referrals?.level3?.total || 0)} FCFA
-              </p>
+            <div class="card mt-4 stat-orange">
+              <div class="text-center">
+                <p class="text-sm opacity-80">Total des gains parrainage</p>
+                <p class="text-3xl font-bold">
+                  ${(state.referrals?.level1?.total || 0) + (state.referrals?.level2?.total || 0) + (state.referrals?.level3?.total || 0)} FCFA
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -401,45 +470,47 @@
             
             <div class="card mb-4">
               <div class="stat-orange rounded-lg p-4 text-center mb-4">
-                <p class="text-sm opacity-80">Solde disponible pour retrait</p>
-                <p class="text-2xl font-bold">${state.currentUser?.earnings || 0} FCFA</p>
+                <p class="text-sm opacity-80">Solde disponible</p>
+                <p class="text-3xl font-bold">${state.currentUser?.earnings || 0} FCFA</p>
               </div>
 
               <form id="withdrawForm">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Méthode de retrait</label>
-                <select id="withdrawMethod" class="input">
+                <select id="withdrawMethod" class="input" onchange="updateWithdrawMin()">
                   <option value="orange">Orange Money (min 1000 FCFA)</option>
                   <option value="mtn">MTN Mobile Money (min 1000 FCFA)</option>
                   <option value="wave">Wave (min 1000 FCFA)</option>
                   <option value="moov">Moov Money (min 1000 FCFA)</option>
-                  <option value="crypto">Crypto USDT (min 10000 FCFA)</option>
+                  <option value="crypto">Crypto USDT TRC20 (min 10000 FCFA)</option>
                 </select>
                 
-                <label class="block text-sm font-medium text-gray-700 mb-2">Montant</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Montant à retirer</label>
                 <input type="number" id="withdrawAmount" class="input" placeholder="Montant en FCFA" min="1000" required>
                 
-                <label class="block text-sm font-medium text-gray-700 mb-2">Numéro/Adresse de paiement</label>
-                <input type="text" id="withdrawDetails" class="input" placeholder="Ex: +225 07 XX XX XX XX ou adresse USDT TRC20" required>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Numéro ou Adresse de réception</label>
+                <input type="text" id="withdrawAccount" class="input" placeholder="+225 XX XX XX XX XX ou adresse USDT" required>
                 
-                <label class="block text-sm font-medium text-gray-700 mb-2">Capture d'écran (obligatoire)</label>
-                <input type="file" id="withdrawScreenshot" accept="image/*" class="input" required>
-                <p class="text-xs text-gray-500 mb-4">Joindre une capture d'écran de votre compte Mobile Money ou wallet</p>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Nom du titulaire</label>
+                <input type="text" id="withdrawName" class="input" placeholder="Nom complet du compte" value="${state.currentUser?.name || ''}">
                 
-                <button type="submit" class="btn-orange w-full">Demander un retrait</button>
+                <button type="submit" class="btn-orange w-full">Demander le retrait</button>
               </form>
+              
+              <p class="text-xs text-gray-500 text-center mt-3">⏱️ Traitement sous 24-48h ouvrées</p>
             </div>
 
             <div class="card">
               <h2 class="font-bold mb-3">📜 Historique des retraits</h2>
-              ${state.withdrawals.length === 0 ? '<p class="text-gray-500 text-sm text-center py-4">Aucun retrait effectué</p>' : `
+              ${state.withdrawals.length === 0 ? 
+                '<p class="text-gray-500 text-sm text-center py-4">Aucun retrait effectué</p>' : `
                 <div class="space-y-2">
                   ${state.withdrawals.map(w => `
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p class="font-semibold">${w.amount} FCFA</p>
-                        <p class="text-xs text-gray-500">${w.method} - ${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p>
+                        <p class="text-xs text-gray-500">${w.method} • ${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p>
                       </div>
-                      <span class="px-2 py-1 rounded text-xs font-semibold ${getStatusColor(w.status)}">${getStatusLabel(w.status)}</span>
+                      <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(w.status)}">${getStatusLabel(w.status)}</span>
                     </div>
                   `).join('')}
                 </div>
@@ -451,20 +522,20 @@
 
       admin: () => `
         <div class="min-h-screen bg-gray-100">
-          <div class="bg-blue-600 text-white p-4">
+          <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
             <div class="max-w-4xl mx-auto flex justify-between items-center">
               <h1 class="text-xl font-bold">⚙️ Admin Panel</h1>
-              <button onclick="logout()" class="text-sm bg-white/20 px-3 py-1 rounded">Déconnexion</button>
+              <button onclick="logout()" class="bg-white/20 px-4 py-2 rounded-lg text-sm">Déconnexion</button>
             </div>
           </div>
           
           <div class="p-4 max-w-4xl mx-auto">
             <div class="flex gap-2 overflow-x-auto mb-4 pb-2">
-              <button onclick="setAdminTab('stats')" class="px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-stats">📊 Stats</button>
-              <button onclick="setAdminTab('pending')" class="px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-pending">⏳ En attente</button>
-              <button onclick="setAdminTab('users')" class="px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-users">👥 Utilisateurs</button>
-              <button onclick="setAdminTab('withdrawals')" class="px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-withdrawals">💰 Retraits</button>
-              <button onclick="setAdminTab('tasks')" class="px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-tasks">📋 Tâches</button>
+              <button onclick="setAdminTab('stats')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-stats">📊 Stats</button>
+              <button onclick="setAdminTab('pending')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-pending">⏳ En attente</button>
+              <button onclick="setAdminTab('users')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-users">👥 Utilisateurs</button>
+              <button onclick="setAdminTab('withdrawals')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-withdrawals">💸 Retraits</button>
+              <button onclick="setAdminTab('config')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-config">⚙️ Config</button>
             </div>
             
             <div id="adminContent"></div>
@@ -473,19 +544,22 @@
       `
     };
 
-    // Navigation et rendu
+    // Navigation
     function renderNav() {
       return `
         <div class="bg-white shadow-sm sticky top-0 z-50">
           <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <h1 class="text-lg font-bold text-blue-600">🚀 Motosu</h1>
-            <button onclick="logout()" class="text-red-500 text-sm">Déconnexion</button>
+            <div class="flex items-center gap-3">
+              <span class="text-sm text-gray-500">${state.currentUser?.earnings || 0} FCFA</span>
+              <button onclick="logout()" class="text-red-500 text-sm">Quitter</button>
+            </div>
           </div>
-          <div class="flex overflow-x-auto border-t">
-            <button onclick="navigate('dashboard')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'dashboard' ? 'tab-active' : ''}">🏠 Accueil</button>
-            <button onclick="navigate('tasks')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'tasks' ? 'tab-active' : ''}">📋 Tâches</button>
-            <button onclick="navigate('referrals')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'referrals' ? 'tab-active' : ''}">👥 Parrainage</button>
-            <button onclick="navigate('withdraw')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'withdraw' ? 'tab-active' : ''}">💰 Retrait</button>
+          <div class="flex border-t">
+            <button onclick="navigate('dashboard')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'dashboard' ? 'tab-active' : 'text-gray-500'}">🏠 Accueil</button>
+            <button onclick="navigate('tasks')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'tasks' ? 'tab-active' : 'text-gray-500'}">📋 Tâches</button>
+            <button onclick="navigate('referrals')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'referrals' ? 'tab-active' : 'text-gray-500'}">👥 Parrainage</button>
+            <button onclick="navigate('withdraw')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'withdraw' ? 'tab-active' : 'text-gray-500'}">💰 Retrait</button>
           </div>
         </div>
       `;
@@ -513,10 +587,11 @@
 
     function getStatusColor(status) {
       const colors = {
-        pending: 'bg-yellow-100 text-yellow-600',
-        approved: 'bg-green-100 text-green-600',
-        rejected: 'bg-red-100 text-red-600',
-        validated: 'bg-green-100 text-green-600'
+        pending: 'bg-yellow-100 text-yellow-700',
+        pending_payment: 'bg-orange-100 text-orange-700',
+        approved: 'bg-green-100 text-green-700',
+        rejected: 'bg-red-100 text-red-700',
+        validated: 'bg-green-100 text-green-700'
       };
       return colors[status] || 'bg-gray-100 text-gray-600';
     }
@@ -524,6 +599,7 @@
     function getStatusLabel(status) {
       const labels = {
         pending: 'En attente',
+        pending_payment: 'Paiement à vérifier',
         approved: 'Approuvé',
         rejected: 'Refusé',
         validated: 'Validé'
@@ -610,31 +686,24 @@
       if (withdrawForm) {
         withdrawForm.onsubmit = async (e) => {
           e.preventDefault();
-          const file = $('#withdrawScreenshot').files[0];
-          if (!file) {
-            toast('Capture d\'écran obligatoire', 'error');
-            return;
-          }
+          const method = $('#withdrawMethod').value;
+          const amount = parseInt($('#withdrawAmount').value);
           
-          const reader = new FileReader();
-          reader.onload = async () => {
-            const method = $('#withdrawMethod').value;
-            const res = await api('/api/withdraw', 'POST', {
-              userId: state.currentUser.id,
-              amount: parseInt($('#withdrawAmount').value),
-              method: method,
-              details: $('#withdrawDetails').value,
-              screenshot: reader.result
-            });
-            if (res.error) {
-              toast(res.error, 'error');
-            } else {
-              toast('Demande de retrait envoyée!', 'success');
-              state.currentUser = await api(`/api/user/${state.currentUser.id}`);
-              navigate('withdraw');
-            }
-          };
-          reader.readAsDataURL(file);
+          const res = await api('/api/withdraw', 'POST', {
+            userId: state.currentUser.id,
+            amount,
+            method,
+            accountNumber: $('#withdrawAccount').value,
+            accountName: $('#withdrawName').value
+          });
+          
+          if (res.error) {
+            toast(res.error, 'error');
+          } else {
+            toast(res.message, 'success');
+            state.currentUser = await api(`/api/user/${state.currentUser.id}`);
+            navigate('withdraw');
+          }
         };
       }
       
@@ -643,14 +712,12 @@
       }
     }
 
-    // Ouvrir une tâche
-    async function openTask(taskId) {
+    // Tâches
+    function openTask(taskId) {
       const task = state.tasks.find(t => t.id === taskId);
       if (!task) return;
       
       state.currentTask = task;
-      state.taskAnswers = [];
-      
       const modal = $('#modal');
       modal.innerHTML = renderTaskModal(task);
     }
@@ -660,16 +727,15 @@
       
       if (task.type === 'sondage') {
         content = `
-          <div class="space-y-6">
+          <div class="space-y-6" id="surveyQuestions">
             ${task.content.questions.map((q, i) => `
-              <div class="question-block" data-index="${i}">
-                <p class="font-semibold mb-3">${i + 1}. ${q.q}</p>
+              <div class="question-block">
+                <p class="font-semibold mb-3 text-gray-800">${i + 1}. ${q.question}</p>
                 <div class="space-y-2">
                   ${q.options.map((opt, j) => `
-                    <label class="radio-option block" data-question="${i}" data-option="${j}">
-                      <input type="radio" name="q${i}" value="${opt}" class="hidden">
+                    <button type="button" class="option-btn" data-question="${i}" data-value="${opt}" onclick="selectSurveyOption(this)">
                       ${opt}
-                    </label>
+                    </button>
                   `).join('')}
                 </div>
               </div>
@@ -678,25 +744,29 @@
         `;
       } else if (task.type === 'verification') {
         content = `
-          <p class="text-gray-600 mb-4">${task.content.instruction}</p>
-          <div class="space-y-2">
+          <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+            <p class="text-sm text-blue-800">${task.content.instruction}</p>
+          </div>
+          <div class="space-y-2" id="verificationItems">
             ${task.content.items.map((item, i) => `
-              <label class="checkbox-item" data-index="${i}">
-                <input type="checkbox" class="mr-3" data-index="${i}">
-                <span>${item.email || item.phone}</span>
-              </label>
+              <div class="check-item" data-index="${i}" onclick="toggleVerificationItem(this)">
+                <span class="flex-1">${item.text}</span>
+                <span class="checkmark hidden">✓</span>
+              </div>
             `).join('')}
           </div>
         `;
       } else if (task.type === 'classification') {
         content = `
-          <p class="text-gray-600 mb-4">Sélectionnez la bonne catégorie pour chaque élément.</p>
-          <div class="space-y-4">
+          <div class="mb-4 p-3 bg-purple-50 rounded-lg">
+            <p class="text-sm text-purple-800">${task.content.instruction}</p>
+          </div>
+          <div class="space-y-3" id="classificationItems">
             ${task.content.items.map((item, i) => `
-              <div class="bg-gray-50 p-3 rounded-lg">
-                <p class="font-semibold mb-2">${item.name}</p>
-                <select class="input mb-0" data-index="${i}">
-                  <option value="">-- Choisir une catégorie --</option>
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <span class="font-medium flex-1">${item.name}</span>
+                <select class="category-select" data-index="${i}">
+                  <option value="">Choisir...</option>
                   ${task.content.categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                 </select>
               </div>
@@ -705,32 +775,33 @@
         `;
       } else if (task.type === 'transcription') {
         content = `
-          <div class="bg-blue-50 p-4 rounded-lg mb-4">
-            <p class="font-semibold mb-2">Texte à transcrire :</p>
-            <p class="text-gray-700 italic">"${task.content.text}"</p>
+          <div class="mb-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+            <p class="text-sm text-gray-500 mb-2">📄 Texte à recopier exactement :</p>
+            <p class="text-gray-800 italic leading-relaxed">"${task.content.textToTranscribe}"</p>
           </div>
-          <textarea id="transcriptionText" class="input h-32" placeholder="Recopiez le texte exactement..."></textarea>
-          <p class="text-xs text-gray-500">Minimum ${task.content.minLength} caractères</p>
+          <textarea id="transcriptionText" class="input h-32" placeholder="Recopiez le texte ci-dessus exactement..."></textarea>
+          <p class="text-xs text-gray-500">Précision minimum requise : ${task.content.minAccuracy}%</p>
         `;
       }
 
       return `
-        <div class="modal" onclick="closeTaskModal(event)">
+        <div class="modal" onclick="closeModal(event)">
           <div class="modal-content" onclick="event.stopPropagation()">
             <div class="flex justify-between items-start mb-4">
               <div>
                 <span class="text-xs px-2 py-1 rounded-full ${getTaskTypeColor(task.type)}">${getTaskTypeLabel(task.type)}</span>
                 <h2 class="text-lg font-bold mt-2">${task.title}</h2>
+                <p class="text-sm text-gray-500">${task.description}</p>
               </div>
-              <button onclick="closeTaskModal()" class="text-gray-400 text-2xl">&times;</button>
+              <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             
-            <div class="mb-6">
+            <div class="mb-6 max-h-96 overflow-y-auto">
               ${content}
             </div>
             
-            <div class="flex gap-3">
-              <button onclick="closeTaskModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold">Annuler</button>
+            <div class="flex gap-3 sticky bottom-0 bg-white pt-3 border-t">
+              <button onclick="closeModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold">Annuler</button>
               <button onclick="submitTask('${task.id}')" class="flex-1 btn-success py-3">Valider (+${task.reward} FCFA)</button>
             </div>
           </div>
@@ -738,7 +809,18 @@
       `;
     }
 
-    function closeTaskModal(event) {
+    function selectSurveyOption(btn) {
+      const question = btn.dataset.question;
+      $$(`[data-question="${question}"]`).forEach(el => el.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+
+    function toggleVerificationItem(item) {
+      item.classList.toggle('selected');
+      item.querySelector('.checkmark').classList.toggle('hidden');
+    }
+
+    function closeModal(event) {
       if (event && event.target !== event.currentTarget) return;
       $('#modal').innerHTML = '';
       state.currentTask = null;
@@ -748,73 +830,104 @@
       const task = state.currentTask;
       if (!task) return;
       
-      let answers = [];
-      let valid = true;
+      let answers;
       
       if (task.type === 'sondage') {
-        task.content.questions.forEach((q, i) => {
-          const selected = document.querySelector(`input[name="q${i}"]:checked`);
-          if (selected) {
-            answers.push(selected.value);
-          }
+        answers = [];
+        task.content.questions.forEach((_, i) => {
+          const selected = $(`.option-btn.selected[data-question="${i}"]`);
+          answers.push(selected ? selected.dataset.value : null);
         });
-        if (answers.length < task.content.questions.length) {
-          toast('Veuillez répondre à toutes les questions', 'error');
-          return;
-        }
       } else if (task.type === 'verification') {
-        const checkboxes = $$('.checkbox-item input:checked');
-        checkboxes.forEach(cb => answers.push(cb.dataset.index));
-        if (answers.length === 0) {
-          toast('Veuillez sélectionner au moins un élément', 'error');
-          return;
-        }
-      } else if (task.type === 'classification') {
-        const selects = $$('.modal-content select');
-        selects.forEach(sel => {
-          if (sel.value) answers.push(sel.value);
+        answers = [];
+        $$('.check-item.selected').forEach(item => {
+          answers.push(parseInt(item.dataset.index));
         });
-        if (answers.length < task.content.items.length) {
-          toast('Veuillez classifier tous les éléments', 'error');
-          return;
-        }
+      } else if (task.type === 'classification') {
+        answers = {};
+        $$('.category-select').forEach(sel => {
+          answers[sel.dataset.index] = sel.value;
+        });
       } else if (task.type === 'transcription') {
-        const text = $('#transcriptionText').value.trim();
-        if (text.length < task.content.minLength) {
-          toast(`Le texte doit contenir au moins ${task.content.minLength} caractères`, 'error');
-          return;
-        }
-        answers = text;
+        answers = $('#transcriptionText').value;
       }
       
       const res = await api(`/api/tasks/${taskId}/complete`, 'POST', {
         userId: state.currentUser.id,
-        answers: answers
+        answers
       });
       
       if (res.error) {
         toast(res.error, 'error');
       } else {
-        toast(`+${res.reward} FCFA gagnés!`, 'success');
-        closeTaskModal();
+        toast(res.message, 'success');
+        closeModal();
         state.currentUser = await api(`/api/user/${state.currentUser.id}`);
         navigate('tasks');
       }
     }
 
-    // Event delegation pour les options radio
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('radio-option')) {
-        const question = e.target.dataset.question;
-        $$(`[data-question="${question}"]`).forEach(el => el.classList.remove('selected'));
-        e.target.classList.add('selected');
-        e.target.querySelector('input').checked = true;
-      }
-      if (e.target.closest('.checkbox-item')) {
-        const item = e.target.closest('.checkbox-item');
-        item.classList.toggle('selected');
-      }
-    });
+    // Preuve de paiement
+    function openPaymentProof() {
+      const modal = $('#modal');
+      modal.innerHTML = `
+        <div class="modal" onclick="closeModal(event)">
+          <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 class="text-lg font-bold mb-4">📤 Envoyer la preuve de paiement</h2>
+            
+            <form id="paymentProofForm">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Capture d'écran du paiement *</label>
+              <input type="file" id="proofScreenshot" accept="image/*" class="input" required>
+              
+              <label class="block text-sm font-medium text-gray-700 mb-2">ID Transaction (optionnel)</label>
+              <input type="text" id="proofTransactionId" class="input" placeholder="Ex: TXN123456789">
+              
+              <label class="block text-sm font-medium text-gray-700 mb-2">Numéro utilisé pour le paiement</label>
+              <input type="text" id="proofPhone" class="input" value="${state.currentUser?.phone || ''}" placeholder="+225 XX XX XX XX XX">
+              
+              <div class="flex gap-3 mt-4">
+                <button type="button" onclick="closeModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold">Annuler</button>
+                <button type="submit" class="flex-1 btn-orange py-3">Envoyer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      
+      $('#paymentProofForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const file = $('#proofScreenshot').files[0];
+        if (!file) {
+          toast('Veuillez ajouter une capture d\'écran', 'error');
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const res = await api('/api/payment/proof', 'POST', {
+            userId: state.currentUser.id,
+            screenshot: reader.result,
+            transactionId: $('#proofTransactionId').value,
+            phoneUsed: $('#proofPhone').value
+          });
+          
+          if (res.error) {
+            toast(res.error, 'error');
+          } else {
+            toast(res.message, 'success');
+            closeModal();
+            state.currentUser = await api(`/api/user/${state.currentUser.id}`);
+            navigate('pending');
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+
+    function copyNumber(number) {
+      navigator.clipboard.writeText(number);
+      toast('Numéro copié: ' + number, 'success');
+    }
 
     function copyReferral() {
       const link = `${window.location.origin}?ref=${state.currentUser.referralCode}`;
@@ -829,59 +942,12 @@
       toast('Déconnexion réussie', 'info');
     }
 
-    // CinetPay
-    function payWithCinetPay() {
-      api('/api/payment/init', 'POST', { userId: state.currentUser.id }).then(data => {
-        if (data.error) {
-          toast(data.error, 'error');
-          return;
-        }
-        
-        CinetPay.setConfig({
-          apikey: '1998578076686c3f77308a92.08703757',
-          site_id: 105901112,
-          notify_url: window.location.origin + '/api/payment/notify',
-          mode: 'PRODUCTION'
-        });
-        
-        CinetPay.getCheckout({
-          transaction_id: data.transactionId,
-          amount: 4000,
-          currency: 'XOF',
-          channels: 'ALL',
-          description: 'Abonnement Motosu Agencies',
-          customer_name: state.currentUser.name,
-          customer_email: state.currentUser.email,
-          customer_phone_number: state.currentUser.phone,
-          customer_address: 'Afrique',
-          customer_city: 'Abidjan',
-          customer_country: 'CI'
-        });
-        
-        CinetPay.waitResponse(async (data) => {
-          if (data.status === 'ACCEPTED') {
-            await api('/api/payment/confirm', 'POST', { 
-              transactionId: data.transaction_id, 
-              userId: state.currentUser.id 
-            });
-            state.currentUser = await api(`/api/user/${state.currentUser.id}`);
-            toast('Paiement réussi! Compte activé.', 'success');
-            navigate('dashboard');
-          }
-        });
-        
-        CinetPay.onError((data) => {
-          toast('Paiement échoué ou annulé', 'error');
-        });
-      });
-    }
-
     // Admin
     let currentAdminTab = 'stats';
 
     async function setAdminTab(tab) {
       currentAdminTab = tab;
-      $$('[id^="tab-"]').forEach(el => el.classList.remove('bg-blue-600', 'text-white'));
+      $$('.admin-tab').forEach(el => el.classList.remove('bg-blue-600', 'text-white'));
       $(`#tab-${tab}`)?.classList.add('bg-blue-600', 'text-white');
       
       const content = $('#adminContent');
@@ -899,9 +965,9 @@
       } else if (tab === 'withdrawals') {
         state.adminData.withdrawals = await api('/api/admin/withdrawals');
         content.innerHTML = renderAdminWithdrawals();
-      } else if (tab === 'tasks') {
-        state.adminData.tasks = await api('/api/admin/tasks');
-        content.innerHTML = renderAdminTasks();
+      } else if (tab === 'config') {
+        state.adminData.config = await api('/api/admin/config');
+        content.innerHTML = renderAdminConfig();
       }
     }
 
@@ -911,23 +977,23 @@
         <div class="grid grid-cols-2 gap-4">
           <div class="card text-center">
             <p class="text-3xl font-bold text-blue-600">${s.totalUsers || 0}</p>
-            <p class="text-gray-500">Utilisateurs total</p>
+            <p class="text-gray-500 text-sm">Total utilisateurs</p>
           </div>
           <div class="card text-center">
             <p class="text-3xl font-bold text-green-600">${s.validatedUsers || 0}</p>
-            <p class="text-gray-500">Comptes actifs</p>
+            <p class="text-gray-500 text-sm">Comptes actifs</p>
           </div>
           <div class="card text-center">
             <p class="text-3xl font-bold text-yellow-600">${s.pendingUsers || 0}</p>
-            <p class="text-gray-500">En attente</p>
+            <p class="text-gray-500 text-sm">En attente</p>
           </div>
           <div class="card text-center">
-            <p class="text-3xl font-bold text-orange-600">${s.totalPayments || 0} FCFA</p>
-            <p class="text-gray-500">Total paiements</p>
+            <p class="text-3xl font-bold text-purple-600">${s.pendingWithdrawals || 0}</p>
+            <p class="text-gray-500 text-sm">Retraits en attente</p>
           </div>
           <div class="card text-center col-span-2">
-            <p class="text-3xl font-bold text-purple-600">${s.totalWithdrawals || 0} FCFA</p>
-            <p class="text-gray-500">Retraits approuvés</p>
+            <p class="text-3xl font-bold text-orange-600">${s.totalWithdrawals || 0} FCFA</p>
+            <p class="text-gray-500 text-sm">Total retraits approuvés</p>
           </div>
         </div>
       `;
@@ -935,20 +1001,29 @@
 
     function renderAdminPending() {
       if (state.adminData.pending.length === 0) {
-        return '<div class="card text-center text-gray-500 py-8">Aucun compte en attente de validation</div>';
+        return '<div class="card text-center text-gray-500 py-8">✓ Aucun compte en attente</div>';
       }
       return state.adminData.pending.map(u => `
         <div class="card mb-3">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="font-bold">${u.name}</p>
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+            <div class="flex-1">
+              <p class="font-bold text-lg">${u.name}</p>
               <p class="text-sm text-gray-500">${u.email}</p>
               <p class="text-sm text-gray-500">${u.phone}</p>
+              <span class="inline-block mt-1 px-2 py-1 text-xs rounded-full ${getStatusColor(u.status)}">${getStatusLabel(u.status)}</span>
               <p class="text-xs text-gray-400 mt-1">Inscrit le ${new Date(u.createdAt).toLocaleDateString('fr-FR')}</p>
+              ${u.paymentProof ? `
+                <div class="mt-3 p-3 bg-orange-50 rounded-lg">
+                  <p class="text-sm font-semibold text-orange-700 mb-2">📸 Preuve de paiement :</p>
+                  <img src="${u.paymentProof.screenshot}" class="w-full max-w-xs rounded-lg border cursor-pointer" onclick="window.open('${u.paymentProof.screenshot}')">
+                  ${u.paymentProof.transactionId ? `<p class="text-xs text-gray-500 mt-1">ID: ${u.paymentProof.transactionId}</p>` : ''}
+                  <p class="text-xs text-gray-500">Tel: ${u.paymentProof.phoneUsed}</p>
+                </div>
+              ` : ''}
             </div>
-            <div class="flex gap-2">
-              <button onclick="validateUser('${u.id}')" class="btn-success text-xs px-3 py-2">✓ Valider</button>
-              <button onclick="rejectUser('${u.id}')" class="btn-danger text-xs px-3 py-2">✗ Refuser</button>
+            <div class="flex sm:flex-col gap-2">
+              <button onclick="validateUser('${u.id}')" class="btn-success text-sm px-4 py-2 flex-1">✓ Valider</button>
+              <button onclick="rejectUser('${u.id}')" class="btn-danger text-sm px-4 py-2 flex-1">✗ Refuser</button>
             </div>
           </div>
         </div>
@@ -961,12 +1036,13 @@
           <p class="text-sm text-gray-500 mb-3">Total: ${state.adminData.users.length} utilisateurs</p>
           <div class="space-y-2">
             ${state.adminData.users.map(u => `
-              <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p class="font-semibold">${u.name} ${u.isAdmin ? '👑' : ''}</p>
-                  <p class="text-xs text-gray-500">${u.email} | ${u.earnings} FCFA gagnés</p>
+                  <p class="text-xs text-gray-500">${u.email}</p>
+                  <p class="text-xs text-gray-500">${u.earnings} FCFA gagnés • ${u.completedTasks?.length || 0} tâches</p>
                 </div>
-                <span class="px-2 py-1 rounded text-xs font-semibold ${getStatusColor(u.status)}">${getStatusLabel(u.status)}</span>
+                <span class="px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(u.status)}">${getStatusLabel(u.status)}</span>
               </div>
             `).join('')}
           </div>
@@ -980,19 +1056,20 @@
       }
       return state.adminData.withdrawals.map(w => `
         <div class="card mb-3">
-          <div class="flex justify-between items-start">
+          <div class="flex flex-col sm:flex-row sm:justify-between gap-3">
             <div>
-              <p class="font-bold text-lg">${w.amount} FCFA</p>
-              <p class="text-sm text-gray-600">${w.userName}</p>
-              <p class="text-sm text-gray-500">${w.method} - ${w.details}</p>
+              <p class="font-bold text-xl text-orange-600">${w.amount} FCFA</p>
+              <p class="font-semibold">${w.userName}</p>
+              <p class="text-sm text-gray-500">${w.method.toUpperCase()}</p>
+              <p class="text-sm text-gray-600">📱 ${w.accountNumber}</p>
+              <p class="text-sm text-gray-500">Nom: ${w.accountName}</p>
               <p class="text-xs text-gray-400">${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p>
-              ${w.screenshot ? `<img src="${w.screenshot}" class="w-20 h-20 object-cover mt-2 rounded cursor-pointer border" onclick="window.open('${w.screenshot}')">` : ''}
             </div>
             <div class="flex flex-col gap-2 items-end">
-              <span class="px-2 py-1 rounded text-xs font-semibold ${getStatusColor(w.status)}">${getStatusLabel(w.status)}</span>
+              <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(w.status)}">${getStatusLabel(w.status)}</span>
               ${w.status === 'pending' ? `
-                <button onclick="approveWithdraw('${w.id}')" class="btn-success text-xs px-3 py-1">Approuver</button>
-                <button onclick="rejectWithdraw('${w.id}')" class="btn-danger text-xs px-3 py-1">Refuser</button>
+                <button onclick="approveWithdraw('${w.id}')" class="btn-success text-sm px-4 py-2">✓ Approuver</button>
+                <button onclick="rejectWithdraw('${w.id}')" class="btn-danger text-sm px-4 py-2">✗ Refuser</button>
               ` : ''}
             </div>
           </div>
@@ -1000,46 +1077,68 @@
       `).join('');
     }
 
-    function renderAdminTasks() {
+    function renderAdminConfig() {
+      const config = state.adminData.config;
       return `
-        <div class="card mb-4">
-          <h3 class="font-bold mb-3">Ajouter une tâche</h3>
-          <select id="taskType" class="input">
-            <option value="sondage">📊 Sondage</option>
-            <option value="verification">✅ Vérification</option>
-            <option value="classification">📁 Classification</option>
-            <option value="transcription">✍️ Transcription</option>
-          </select>
-          <input type="text" id="taskTitle" class="input" placeholder="Titre de la tâche">
-          <input type="number" id="taskReward" class="input" placeholder="Récompense (FCFA)">
-          <textarea id="taskDesc" class="input" placeholder="Description"></textarea>
-          <button onclick="addTask()" class="btn-primary w-full">Ajouter la tâche</button>
-        </div>
-        <h3 class="font-bold mb-3">Tâches existantes (${state.adminData.tasks.length})</h3>
-        <div class="space-y-2">
-          ${state.adminData.tasks.map(t => `
-            <div class="card flex justify-between items-center">
-              <div>
-                <span class="text-xs px-2 py-1 rounded-full ${getTaskTypeColor(t.type)}">${getTaskTypeLabel(t.type)}</span>
-                <p class="font-semibold mt-1">${t.title}</p>
-                <p class="text-green-600 font-bold">${t.reward} FCFA</p>
+        <div class="card">
+          <h2 class="font-bold text-lg mb-4">📱 Numéros de paiement</h2>
+          <div id="paymentNumbersList">
+            ${(config.paymentNumbers || []).map((p, i) => `
+              <div class="flex items-center gap-2 mb-3 p-3 bg-gray-50 rounded-lg">
+                <div class="flex-1 grid grid-cols-3 gap-2">
+                  <input type="text" class="input mb-0 text-sm" value="${p.operator}" placeholder="Opérateur" id="op-${i}">
+                  <input type="text" class="input mb-0 text-sm" value="${p.number}" placeholder="Numéro" id="num-${i}">
+                  <input type="text" class="input mb-0 text-sm" value="${p.name}" placeholder="Nom" id="name-${i}">
+                </div>
+                <button onclick="removePaymentNumber(${i})" class="text-red-500 text-xl px-2">×</button>
               </div>
-              <button onclick="deleteTask('${t.id}')" class="btn-danger text-xs">Supprimer</button>
-            </div>
-          `).join('')}
+            `).join('')}
+          </div>
+          <button onclick="addPaymentNumber()" class="text-blue-600 text-sm font-semibold mb-4">+ Ajouter un numéro</button>
+          <button onclick="savePaymentNumbers()" class="btn-primary w-full">Enregistrer les numéros</button>
         </div>
       `;
     }
 
+    function addPaymentNumber() {
+      state.adminData.config.paymentNumbers.push({ operator: '', number: '', name: '' });
+      $('#adminContent').innerHTML = renderAdminConfig();
+    }
+
+    function removePaymentNumber(index) {
+      state.adminData.config.paymentNumbers.splice(index, 1);
+      $('#adminContent').innerHTML = renderAdminConfig();
+    }
+
+    async function savePaymentNumbers() {
+      const numbers = [];
+      state.adminData.config.paymentNumbers.forEach((_, i) => {
+        const op = $(`#op-${i}`)?.value;
+        const num = $(`#num-${i}`)?.value;
+        const name = $(`#name-${i}`)?.value;
+        if (op && num) {
+          numbers.push({ operator: op, number: num, name: name || '' });
+        }
+      });
+      
+      const res = await api('/api/admin/config/payment-numbers', 'POST', { paymentNumbers: numbers });
+      if (res.success) {
+        toast('Numéros enregistrés!', 'success');
+        state.config.paymentNumbers = numbers;
+      } else {
+        toast('Erreur lors de l\'enregistrement', 'error');
+      }
+    }
+
     async function validateUser(userId) {
       await api(`/api/admin/validate/${userId}`, 'POST');
-      toast('Utilisateur validé! Commissions de parrainage versées.', 'success');
+      toast('Compte validé! Commissions versées.', 'success');
       setAdminTab('pending');
     }
 
     async function rejectUser(userId) {
       await api(`/api/admin/reject/${userId}`, 'POST');
-      toast('Utilisateur refusé', 'info');
+      toast('Compte refusé', 'info');
       setAdminTab('pending');
     }
 
@@ -1055,46 +1154,21 @@
       setAdminTab('withdrawals');
     }
 
-    async function addTask() {
-      const type = $('#taskType').value;
-      const title = $('#taskTitle').value;
-      const reward = $('#taskReward').value;
-      const description = $('#taskDesc').value;
-      
-      if (!title || !reward) {
-        toast('Veuillez remplir tous les champs', 'error');
-        return;
-      }
-      
-      const res = await api('/api/admin/tasks', 'POST', {
-        type,
-        title,
-        reward,
-        description,
-        content: {}
-      });
-      if (res.success) {
-        toast('Tâche ajoutée!', 'success');
-        setAdminTab('tasks');
-      }
-    }
-
-    async function deleteTask(id) {
-      if (!confirm('Supprimer cette tâche ?')) return;
-      await api(`/api/admin/tasks/${id}`, 'DELETE');
-      toast('Tâche supprimée', 'info');
-      setAdminTab('tasks');
-    }
-
     // Init
     async function init() {
+      // Charger la configuration
+      state.config = await api('/api/config');
+      
+      // Vérifier code parrain dans l'URL
       const urlParams = new URLSearchParams(window.location.search);
       const ref = urlParams.get('ref');
       if (ref) {
         localStorage.setItem('referralCode', ref);
-        toast('Code parrain enregistré: ' + ref, 'info');
+        toast('Code parrain enregistré: ' + ref, 'success');
+        window.history.replaceState({}, '', '/');
       }
 
+      // Vérifier session existante
       const userId = localStorage.getItem('userId');
       if (userId) {
         try {

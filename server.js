@@ -10,6 +10,16 @@ app.use(express.urlencoded({ extended: true }));
 
 // Stockage en mémoire
 const db = {
+  // Configuration admin (numéros de paiement)
+  config: {
+    paymentNumbers: [
+      { operator: 'Orange Money', number: '+225 07 00 00 00 00', name: 'MOTOSU AGENCIES' },
+      { operator: 'MTN Mobile Money', number: '+225 05 00 00 00 00', name: 'MOTOSU AGENCIES' },
+      { operator: 'Wave', number: '+225 01 00 00 00 00', name: 'MOTOSU AGENCIES' },
+      { operator: 'Moov Money', number: '+225 01 00 00 00 00', name: 'MOTOSU AGENCIES' }
+    ],
+    subscriptionAmount: 4000
+  },
   users: [{
     id: 'admin-001',
     name: 'Administrateur',
@@ -26,7 +36,8 @@ const db = {
     tasksCompletedToday: [],
     lastTaskDate: null,
     completedTasks: [],
-    subscriptionDate: null
+    subscriptionDate: null,
+    paymentProof: null
   }],
   tasks: [
     { 
@@ -34,15 +45,33 @@ const db = {
       type: 'sondage', 
       title: 'Enquête sur les habitudes de paiement mobile', 
       reward: 85, 
-      description: 'Répondez à des questions sur votre utilisation de Mobile Money',
+      description: 'Répondez à 6 questions sur votre utilisation de Mobile Money',
       content: {
         questions: [
-          { q: 'Quel service Mobile Money utilisez-vous le plus ?', options: ['Orange Money', 'MTN Mobile Money', 'Wave', 'Moov Money', 'Autre'] },
-          { q: 'Combien de transactions faites-vous par semaine ?', options: ['1-5', '6-10', '11-20', 'Plus de 20'] },
-          { q: 'Quel montant moyen par transaction ?', options: ['Moins de 5000 FCFA', '5000-20000 FCFA', '20000-50000 FCFA', 'Plus de 50000 FCFA'] },
-          { q: 'Utilisez-vous le paiement mobile pour les achats en ligne ?', options: ['Oui souvent', 'Parfois', 'Rarement', 'Jamais'] },
-          { q: 'Avez-vous confiance dans les services Mobile Money ?', options: ['Totalement', 'Plutôt oui', 'Plutôt non', 'Pas du tout'] },
-          { q: 'Quelle amélioration souhaitez-vous ?', options: ['Moins de frais', 'Plus de points de retrait', 'Meilleure sécurité', 'Interface plus simple'] }
+          { 
+            question: 'Quel service Mobile Money utilisez-vous le plus ?', 
+            options: ['Orange Money', 'MTN Mobile Money', 'Wave', 'Moov Money', 'Autre'] 
+          },
+          { 
+            question: 'Combien de transactions faites-vous par semaine ?', 
+            options: ['1-5', '6-10', '11-20', 'Plus de 20'] 
+          },
+          { 
+            question: 'Quel montant moyen par transaction ?', 
+            options: ['Moins de 5000 FCFA', '5000-20000 FCFA', '20000-50000 FCFA', 'Plus de 50000 FCFA'] 
+          },
+          { 
+            question: 'Utilisez-vous le paiement mobile pour les achats en ligne ?', 
+            options: ['Oui souvent', 'Parfois', 'Rarement', 'Jamais'] 
+          },
+          { 
+            question: 'Avez-vous confiance dans les services Mobile Money ?', 
+            options: ['Totalement', 'Plutôt oui', 'Plutôt non', 'Pas du tout'] 
+          },
+          { 
+            question: 'Quelle amélioration souhaitez-vous ?', 
+            options: ['Moins de frais', 'Plus de points de retrait', 'Meilleure sécurité', 'Interface plus simple'] 
+          }
         ]
       }
     },
@@ -51,17 +80,41 @@ const db = {
       type: 'sondage', 
       title: 'Étude sur l\'utilisation des réseaux sociaux', 
       reward: 100, 
-      description: 'Partagez vos habitudes sur les réseaux sociaux',
+      description: 'Partagez vos habitudes sur les réseaux sociaux (8 questions)',
       content: {
         questions: [
-          { q: 'Quel réseau social utilisez-vous le plus ?', options: ['Facebook', 'WhatsApp', 'TikTok', 'Instagram', 'Twitter/X', 'YouTube'] },
-          { q: 'Combien d\'heures par jour passez-vous sur les réseaux ?', options: ['Moins d\'1h', '1-3h', '3-5h', 'Plus de 5h'] },
-          { q: 'Suivez-vous des influenceurs africains ?', options: ['Oui beaucoup', 'Quelques-uns', 'Très peu', 'Aucun'] },
-          { q: 'Achetez-vous des produits vus sur les réseaux ?', options: ['Souvent', 'Parfois', 'Rarement', 'Jamais'] },
-          { q: 'Créez-vous du contenu vous-même ?', options: ['Oui régulièrement', 'De temps en temps', 'Très rarement', 'Jamais'] },
-          { q: 'Les réseaux sociaux vous aident-ils professionnellement ?', options: ['Oui beaucoup', 'Un peu', 'Pas vraiment', 'Pas du tout'] },
-          { q: 'Utilisez-vous les réseaux pour vous informer ?', options: ['C\'est ma source principale', 'Une source parmi d\'autres', 'Rarement', 'Jamais'] },
-          { q: 'Êtes-vous préoccupé par votre vie privée en ligne ?', options: ['Très préoccupé', 'Assez préoccupé', 'Peu préoccupé', 'Pas du tout'] }
+          { 
+            question: 'Quel réseau social utilisez-vous le plus ?', 
+            options: ['Facebook', 'WhatsApp', 'TikTok', 'Instagram', 'Twitter/X', 'YouTube'] 
+          },
+          { 
+            question: 'Combien d\'heures par jour passez-vous sur les réseaux ?', 
+            options: ['Moins d\'1h', '1-3h', '3-5h', 'Plus de 5h'] 
+          },
+          { 
+            question: 'Suivez-vous des influenceurs africains ?', 
+            options: ['Oui beaucoup', 'Quelques-uns', 'Très peu', 'Aucun'] 
+          },
+          { 
+            question: 'Achetez-vous des produits vus sur les réseaux ?', 
+            options: ['Souvent', 'Parfois', 'Rarement', 'Jamais'] 
+          },
+          { 
+            question: 'Créez-vous du contenu vous-même ?', 
+            options: ['Oui régulièrement', 'De temps en temps', 'Très rarement', 'Jamais'] 
+          },
+          { 
+            question: 'Les réseaux sociaux vous aident-ils professionnellement ?', 
+            options: ['Oui beaucoup', 'Un peu', 'Pas vraiment', 'Pas du tout'] 
+          },
+          { 
+            question: 'Utilisez-vous les réseaux pour vous informer ?', 
+            options: ['C\'est ma source principale', 'Une source parmi d\'autres', 'Rarement', 'Jamais'] 
+          },
+          { 
+            question: 'Êtes-vous préoccupé par votre vie privée en ligne ?', 
+            options: ['Très préoccupé', 'Assez préoccupé', 'Peu préoccupé', 'Pas du tout'] 
+          }
         ]
       }
     },
@@ -70,15 +123,17 @@ const db = {
       type: 'verification', 
       title: 'Vérification d\'adresses email professionnelles', 
       reward: 35, 
-      description: 'Identifiez les adresses email valides parmi la liste',
+      description: 'Identifiez les 5 adresses email valides parmi la liste',
       content: {
-        instruction: 'Cochez les adresses email qui semblent valides et professionnelles',
+        instruction: 'Sélectionnez uniquement les adresses email qui ont un format valide (exemple: nom@domaine.com)',
         items: [
-          { email: 'contact@entreprise-africa.com', valid: true },
-          { email: 'jean.dupont@@gmail.com', valid: false },
-          { email: 'service.client@banque-ci.net', valid: true },
-          { email: 'info@shop', valid: false },
-          { email: 'support@motosu-agencies.com', valid: true }
+          { text: 'contact@entreprise-africa.com', isValid: true },
+          { text: 'jean.dupont@@gmail.com', isValid: false },
+          { text: 'service.client@banque-ci.net', isValid: true },
+          { text: 'info@shop', isValid: false },
+          { text: 'support@motosu-agencies.com', isValid: true },
+          { text: 'test@test@mail.com', isValid: false },
+          { text: 'commercial@orange.ci', isValid: true }
         ]
       }
     },
@@ -87,18 +142,19 @@ const db = {
       type: 'classification', 
       title: 'Classification de produits e-commerce', 
       reward: 45, 
-      description: 'Classez ces produits dans la bonne catégorie',
+      description: 'Classez 8 produits dans leurs catégories respectives',
       content: {
+        instruction: 'Glissez chaque produit dans la bonne catégorie',
         categories: ['Électronique', 'Mode', 'Maison', 'Alimentation'],
         items: [
-          { name: 'Smartphone Samsung Galaxy', category: 'Électronique' },
-          { name: 'Robe en wax', category: 'Mode' },
-          { name: 'Ventilateur de table', category: 'Maison' },
-          { name: 'Riz parfumé 5kg', category: 'Alimentation' },
-          { name: 'Écouteurs Bluetooth', category: 'Électronique' },
-          { name: 'Chaussures en cuir', category: 'Mode' },
-          { name: 'Casserole antiadhésive', category: 'Maison' },
-          { name: 'Huile de palme 1L', category: 'Alimentation' }
+          { name: 'Smartphone Samsung Galaxy', correctCategory: 'Électronique' },
+          { name: 'Robe en wax africain', correctCategory: 'Mode' },
+          { name: 'Ventilateur de table 40W', correctCategory: 'Maison' },
+          { name: 'Riz parfumé 5kg', correctCategory: 'Alimentation' },
+          { name: 'Écouteurs Bluetooth sans fil', correctCategory: 'Électronique' },
+          { name: 'Chaussures en cuir homme', correctCategory: 'Mode' },
+          { name: 'Casserole antiadhésive 24cm', correctCategory: 'Maison' },
+          { name: 'Huile de palme rouge 1L', correctCategory: 'Alimentation' }
         ]
       }
     },
@@ -107,10 +163,10 @@ const db = {
       type: 'transcription', 
       title: 'Transcription d\'un message vocal professionnel', 
       reward: 110, 
-      description: 'Recopiez exactement le texte affiché',
+      description: 'Recopiez exactement le texte affiché sans fautes',
       content: {
-        text: 'Bonjour et bienvenue chez Motosu Agencies. Nous sommes heureux de vous accompagner dans votre parcours entrepreneurial. Notre équipe reste à votre disposition pour toute question. Merci de votre confiance.',
-        minLength: 150
+        textToTranscribe: 'Bonjour et bienvenue chez Motosu Agencies. Nous sommes heureux de vous accompagner dans votre parcours entrepreneurial. Notre équipe reste à votre disposition pour toute question. Merci de votre confiance et à très bientôt.',
+        minAccuracy: 90
       }
     },
     { 
@@ -118,19 +174,49 @@ const db = {
       type: 'sondage', 
       title: 'Enquête sur les services bancaires mobiles', 
       reward: 120, 
-      description: 'Donnez votre avis sur les banques et services financiers',
+      description: 'Donnez votre avis sur les banques et services financiers (10 questions)',
       content: {
         questions: [
-          { q: 'Avez-vous un compte bancaire traditionnel ?', options: ['Oui', 'Non', 'En cours d\'ouverture'] },
-          { q: 'Utilisez-vous l\'application mobile de votre banque ?', options: ['Oui quotidiennement', 'Parfois', 'Rarement', 'Je n\'en ai pas'] },
-          { q: 'Faites-vous des virements internationaux ?', options: ['Souvent', 'Parfois', 'Rarement', 'Jamais'] },
-          { q: 'Quel est votre principal obstacle bancaire ?', options: ['Frais élevés', 'Accès difficile', 'Manque de confiance', 'Complexité'] },
-          { q: 'Seriez-vous intéressé par des microcrédits mobiles ?', options: ['Très intéressé', 'Assez intéressé', 'Peu intéressé', 'Pas du tout'] },
-          { q: 'Épargnez-vous régulièrement ?', options: ['Oui chaque mois', 'Quand je peux', 'Rarement', 'Jamais'] },
-          { q: 'Utilisez-vous des services de transfert d\'argent ?', options: ['Western Union', 'MoneyGram', 'Wave', 'Autres', 'Aucun'] },
-          { q: 'Préférez-vous le cash ou le digital ?', options: ['100% digital', 'Plutôt digital', 'Plutôt cash', '100% cash'] },
-          { q: 'Faites-vous confiance aux fintechs africaines ?', options: ['Totalement', 'Assez', 'Peu', 'Pas du tout'] },
-          { q: 'Quel service financier vous manque le plus ?', options: ['Crédit accessible', 'Assurance mobile', 'Investissement', 'Épargne rémunérée'] }
+          { 
+            question: 'Avez-vous un compte bancaire traditionnel ?', 
+            options: ['Oui, dans une banque locale', 'Oui, dans une banque internationale', 'Non', 'En cours d\'ouverture'] 
+          },
+          { 
+            question: 'Utilisez-vous l\'application mobile de votre banque ?', 
+            options: ['Oui quotidiennement', 'Oui parfois', 'Rarement', 'Je n\'en ai pas'] 
+          },
+          { 
+            question: 'Faites-vous des virements internationaux ?', 
+            options: ['Souvent', 'Parfois', 'Rarement', 'Jamais'] 
+          },
+          { 
+            question: 'Quel est votre principal obstacle bancaire ?', 
+            options: ['Frais trop élevés', 'Accès difficile', 'Manque de confiance', 'Complexité des procédures'] 
+          },
+          { 
+            question: 'Seriez-vous intéressé par des microcrédits mobiles ?', 
+            options: ['Très intéressé', 'Assez intéressé', 'Peu intéressé', 'Pas du tout intéressé'] 
+          },
+          { 
+            question: 'Épargnez-vous régulièrement ?', 
+            options: ['Oui chaque mois', 'Quand je peux', 'Rarement', 'Jamais'] 
+          },
+          { 
+            question: 'Quel service de transfert utilisez-vous ?', 
+            options: ['Western Union', 'MoneyGram', 'Wave', 'WorldRemit', 'Aucun'] 
+          },
+          { 
+            question: 'Préférez-vous le cash ou le digital ?', 
+            options: ['100% digital', 'Plutôt digital', 'Plutôt cash', '100% cash'] 
+          },
+          { 
+            question: 'Faites-vous confiance aux fintechs africaines ?', 
+            options: ['Totalement', 'Assez confiance', 'Peu confiance', 'Pas du tout'] 
+          },
+          { 
+            question: 'Quel service financier vous manque le plus ?', 
+            options: ['Crédit accessible', 'Assurance mobile', 'Plateforme d\'investissement', 'Épargne rémunérée'] 
+          }
         ]
       }
     },
@@ -139,15 +225,17 @@ const db = {
       type: 'verification', 
       title: 'Vérification de numéros de téléphone', 
       reward: 40, 
-      description: 'Identifiez les numéros de téléphone au format correct',
+      description: 'Identifiez les numéros au format international correct',
       content: {
-        instruction: 'Cochez les numéros qui respectent le format international (+225 XX XX XX XX XX)',
+        instruction: 'Sélectionnez les numéros qui respectent le format international (+225 XX XX XX XX XX)',
         items: [
-          { phone: '+225 07 08 09 10 11', valid: true },
-          { phone: '225070809101', valid: false },
-          { phone: '+225 05 04 03 02 01', valid: true },
-          { phone: '+22 507 080 910', valid: false },
-          { phone: '+225 01 02 03 04 05', valid: true }
+          { text: '+225 07 08 09 10 11', isValid: true },
+          { text: '225070809101', isValid: false },
+          { text: '+225 05 04 03 02 01', isValid: true },
+          { text: '+22 507 080 910', isValid: false },
+          { text: '+225 01 02 03 04 05', isValid: true },
+          { text: '07 08 09 10 11', isValid: false },
+          { text: '+225 07 77 88 99 00', isValid: true }
         ]
       }
     },
@@ -156,18 +244,19 @@ const db = {
       type: 'classification', 
       title: 'Classification de contenus digitaux', 
       reward: 50, 
-      description: 'Classez ces contenus par type',
+      description: 'Classez 8 types de contenus par catégorie',
       content: {
+        instruction: 'Associez chaque contenu à sa catégorie appropriée',
         categories: ['Éducatif', 'Divertissement', 'Commercial', 'Informatif'],
         items: [
-          { name: 'Tutoriel Excel pour débutants', category: 'Éducatif' },
-          { name: 'Clip musical Afrobeat', category: 'Divertissement' },
-          { name: 'Publicité pour téléphone', category: 'Commercial' },
-          { name: 'Actualités économiques Afrique', category: 'Informatif' },
-          { name: 'Cours de français en ligne', category: 'Éducatif' },
-          { name: 'Série télévisée ivoirienne', category: 'Divertissement' },
-          { name: 'Promotion boutique en ligne', category: 'Commercial' },
-          { name: 'Météo quotidienne', category: 'Informatif' }
+          { name: 'Tutoriel Excel pour débutants', correctCategory: 'Éducatif' },
+          { name: 'Clip musical Afrobeat 2024', correctCategory: 'Divertissement' },
+          { name: 'Publicité iPhone 15 Pro', correctCategory: 'Commercial' },
+          { name: 'Journal télévisé RTI', correctCategory: 'Informatif' },
+          { name: 'Cours de programmation Python', correctCategory: 'Éducatif' },
+          { name: 'Série télévisée ivoirienne', correctCategory: 'Divertissement' },
+          { name: 'Promotion Black Friday Jumia', correctCategory: 'Commercial' },
+          { name: 'Bulletin météo Afrique de l\'Ouest', correctCategory: 'Informatif' }
         ]
       }
     },
@@ -176,15 +265,33 @@ const db = {
       type: 'sondage', 
       title: 'Étude sur les habitudes alimentaires', 
       reward: 90, 
-      description: 'Partagez vos habitudes de consommation alimentaire',
+      description: 'Partagez vos habitudes de consommation alimentaire (6 questions)',
       content: {
         questions: [
-          { q: 'Combien de repas prenez-vous par jour ?', options: ['1 repas', '2 repas', '3 repas', 'Plus de 3'] },
-          { q: 'Cuisinez-vous à la maison ?', options: ['Toujours', 'Souvent', 'Parfois', 'Rarement'] },
-          { q: 'Achetez-vous des plats préparés ?', options: ['Quotidiennement', 'Plusieurs fois/semaine', 'Occasionnellement', 'Jamais'] },
-          { q: 'Consommez-vous des produits locaux ?', options: ['Exclusivement', 'Principalement', 'Parfois', 'Rarement'] },
-          { q: 'Utilisez-vous des apps de livraison de repas ?', options: ['Régulièrement', 'Parfois', 'Rarement', 'Jamais'] },
-          { q: 'Quel est votre budget alimentaire mensuel ?', options: ['Moins de 30000 FCFA', '30000-60000 FCFA', '60000-100000 FCFA', 'Plus de 100000 FCFA'] }
+          { 
+            question: 'Combien de repas prenez-vous par jour ?', 
+            options: ['1 repas', '2 repas', '3 repas', 'Plus de 3 repas'] 
+          },
+          { 
+            question: 'Cuisinez-vous à la maison ?', 
+            options: ['Toujours', 'Souvent', 'Parfois', 'Rarement'] 
+          },
+          { 
+            question: 'Achetez-vous des plats préparés ?', 
+            options: ['Quotidiennement', 'Plusieurs fois par semaine', 'Occasionnellement', 'Jamais'] 
+          },
+          { 
+            question: 'Consommez-vous des produits locaux ?', 
+            options: ['Exclusivement local', 'Principalement local', 'Mixte local/importé', 'Principalement importé'] 
+          },
+          { 
+            question: 'Utilisez-vous des apps de livraison de repas ?', 
+            options: ['Régulièrement', 'Parfois', 'Rarement', 'Jamais'] 
+          },
+          { 
+            question: 'Quel est votre budget alimentaire mensuel ?', 
+            options: ['Moins de 30 000 FCFA', '30 000 - 60 000 FCFA', '60 000 - 100 000 FCFA', 'Plus de 100 000 FCFA'] 
+          }
         ]
       }
     },
@@ -192,11 +299,11 @@ const db = {
       id: 'task-10', 
       type: 'transcription', 
       title: 'Transcription d\'un slogan commercial', 
-      reward: 80, 
-      description: 'Recopiez exactement le message publicitaire',
+      reward: 75, 
+      description: 'Recopiez le message publicitaire sans erreur',
       content: {
-        text: 'Motosu Agencies, votre partenaire de confiance pour réussir en Afrique. Rejoignez notre communauté de plus de 10 000 entrepreneurs et développez votre activité dès aujourd\'hui.',
-        minLength: 100
+        textToTranscribe: 'Motosu Agencies, votre partenaire de confiance pour réussir en Afrique. Rejoignez notre communauté de plus de dix mille entrepreneurs et développez votre activité dès aujourd\'hui. Ensemble, construisons l\'avenir.',
+        minAccuracy: 90
       }
     }
   ],
@@ -208,11 +315,22 @@ const db = {
 // Utilitaires
 const hashPassword = (pwd) => crypto.createHash('sha256').update(pwd).digest('hex');
 const generateId = () => crypto.randomBytes(8).toString('hex');
-const generateReferralCode = (name) => name.substring(0, 4).toUpperCase() + generateId().substring(0, 4).toUpperCase();
+const generateReferralCode = (name) => {
+  const cleanName = name.replace(/[^a-zA-Z]/g, '').substring(0, 4).toUpperCase();
+  return cleanName + generateId().substring(0, 4).toUpperCase();
+};
 
 // Servir index.html
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// API: Configuration (numéros de paiement)
+app.get('/api/config', (req, res) => {
+  res.json({
+    paymentNumbers: db.config.paymentNumbers,
+    subscriptionAmount: db.config.subscriptionAmount
+  });
 });
 
 // API: Inscription
@@ -249,7 +367,8 @@ app.post('/api/register', (req, res) => {
     tasksCompletedToday: [],
     lastTaskDate: null,
     completedTasks: [],
-    subscriptionDate: null
+    subscriptionDate: null,
+    paymentProof: null
   };
   
   db.users.push(user);
@@ -297,6 +416,43 @@ app.get('/api/dashboard/:userId', (req, res) => {
   });
 });
 
+// API: Soumettre preuve de paiement
+app.post('/api/payment/proof', (req, res) => {
+  const { userId, screenshot, transactionId, phoneUsed } = req.body;
+  
+  const user = db.users.find(u => u.id === userId);
+  if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+  
+  if (!screenshot) {
+    return res.status(400).json({ error: 'Capture d\'écran obligatoire' });
+  }
+  
+  user.paymentProof = {
+    screenshot,
+    transactionId: transactionId || '',
+    phoneUsed: phoneUsed || user.phone,
+    submittedAt: new Date().toISOString()
+  };
+  user.status = 'pending_payment';
+  
+  // Enregistrer dans les paiements
+  db.payments.push({
+    id: generateId(),
+    userId: userId,
+    userName: user.name,
+    userEmail: user.email,
+    userPhone: user.phone,
+    amount: db.config.subscriptionAmount,
+    screenshot,
+    transactionId: transactionId || '',
+    phoneUsed: phoneUsed || user.phone,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  });
+  
+  res.json({ success: true, message: 'Preuve de paiement soumise. En attente de validation.' });
+});
+
 // API: Tâches
 app.get('/api/tasks', (req, res) => {
   res.json(db.tasks);
@@ -309,7 +465,7 @@ app.get('/api/tasks/:taskId', (req, res) => {
   res.json(task);
 });
 
-// API: Compléter tâche avec validation des réponses
+// API: Compléter tâche
 app.post('/api/tasks/:taskId/complete', (req, res) => {
   const { userId, answers } = req.body;
   const { taskId } = req.params;
@@ -317,11 +473,15 @@ app.post('/api/tasks/:taskId/complete', (req, res) => {
   const user = db.users.find(u => u.id === userId);
   if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
   
+  if (user.status !== 'validated') {
+    return res.status(403).json({ error: 'Compte non validé' });
+  }
+  
   const task = db.tasks.find(t => t.id === taskId);
   if (!task) return res.status(404).json({ error: 'Tâche non trouvée' });
   
   if (user.completedTasks.includes(taskId)) {
-    return res.status(400).json({ error: 'Tâche déjà complétée' });
+    return res.status(400).json({ error: 'Vous avez déjà complété cette tâche' });
   }
   
   const today = new Date().toDateString();
@@ -331,23 +491,97 @@ app.post('/api/tasks/:taskId/complete', (req, res) => {
   }
   
   if (user.tasksCompletedToday.length >= 10) {
-    return res.status(400).json({ error: 'Limite de 10 tâches/jour atteinte' });
+    return res.status(400).json({ error: 'Limite de 10 tâches par jour atteinte. Revenez demain!' });
   }
   
-  // Validation basique selon le type de tâche
-  if (task.type === 'sondage' && (!answers || answers.length < task.content.questions.length)) {
-    return res.status(400).json({ error: 'Veuillez répondre à toutes les questions' });
+  // Validation selon le type de tâche
+  let isValid = false;
+  let score = 0;
+  
+  if (task.type === 'sondage') {
+    // Vérifier que toutes les questions ont une réponse
+    if (answers && answers.length === task.content.questions.length) {
+      const allAnswered = answers.every(a => a !== null && a !== undefined && a !== '');
+      if (allAnswered) {
+        isValid = true;
+        score = 100;
+      } else {
+        return res.status(400).json({ error: 'Veuillez répondre à toutes les questions' });
+      }
+    } else {
+      return res.status(400).json({ error: `Vous devez répondre aux ${task.content.questions.length} questions` });
+    }
+  } else if (task.type === 'verification') {
+    // Vérifier les bonnes réponses
+    if (answers && Array.isArray(answers)) {
+      const correctItems = task.content.items.filter(item => item.isValid);
+      const selectedCorrect = answers.filter(idx => task.content.items[idx]?.isValid).length;
+      const selectedIncorrect = answers.filter(idx => !task.content.items[idx]?.isValid).length;
+      
+      score = Math.max(0, (selectedCorrect - selectedIncorrect) / correctItems.length * 100);
+      isValid = score >= 50;
+      
+      if (!isValid) {
+        return res.status(400).json({ error: 'Trop d\'erreurs. Essayez de mieux identifier les éléments valides.' });
+      }
+    } else {
+      return res.status(400).json({ error: 'Veuillez sélectionner les éléments valides' });
+    }
+  } else if (task.type === 'classification') {
+    // Vérifier les classifications
+    if (answers && typeof answers === 'object') {
+      let correct = 0;
+      task.content.items.forEach((item, idx) => {
+        if (answers[idx] === item.correctCategory) correct++;
+      });
+      score = (correct / task.content.items.length) * 100;
+      isValid = score >= 60;
+      
+      if (!isValid) {
+        return res.status(400).json({ error: `Score insuffisant (${Math.round(score)}%). Minimum 60% requis.` });
+      }
+    } else {
+      return res.status(400).json({ error: 'Veuillez classifier tous les éléments' });
+    }
+  } else if (task.type === 'transcription') {
+    // Vérifier la transcription
+    if (answers && typeof answers === 'string') {
+      const original = task.content.textToTranscribe.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôùûüç\s]/g, '');
+      const submitted = answers.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôùûüç\s]/g, '');
+      
+      // Calcul de similarité simple
+      const words1 = original.split(/\s+/);
+      const words2 = submitted.split(/\s+/);
+      let matches = 0;
+      words1.forEach(w => {
+        if (words2.includes(w)) matches++;
+      });
+      score = (matches / words1.length) * 100;
+      isValid = score >= task.content.minAccuracy;
+      
+      if (!isValid) {
+        return res.status(400).json({ error: `Précision insuffisante (${Math.round(score)}%). Minimum ${task.content.minAccuracy}% requis.` });
+      }
+    } else {
+      return res.status(400).json({ error: 'Veuillez saisir la transcription' });
+    }
   }
   
-  if (task.type === 'transcription' && (!answers || answers.length < task.content.minLength)) {
-    return res.status(400).json({ error: 'Le texte transcrit est trop court' });
+  if (isValid) {
+    user.completedTasks.push(taskId);
+    user.tasksCompletedToday.push(taskId);
+    user.earnings += task.reward;
+    
+    res.json({ 
+      success: true, 
+      reward: task.reward, 
+      score: Math.round(score),
+      totalEarnings: user.earnings,
+      message: `Bravo! +${task.reward} FCFA gagnés (Score: ${Math.round(score)}%)`
+    });
+  } else {
+    res.status(400).json({ error: 'Tâche non validée' });
   }
-  
-  user.completedTasks.push(taskId);
-  user.tasksCompletedToday.push(taskId);
-  user.earnings += task.reward;
-  
-  res.json({ success: true, reward: task.reward, totalEarnings: user.earnings });
 });
 
 // API: Parrainages
@@ -361,6 +595,7 @@ app.get('/api/referrals/:userId', (req, res) => {
   
   res.json({
     referralCode: user.referralCode,
+    referralLink: `https://motosu.onrender.com?ref=${user.referralCode}`,
     level1: { users: level1, commission: 500, total: level1.filter(u => u.status === 'validated').length * 500 },
     level2: { users: level2, commission: 200, total: level2.filter(u => u.status === 'validated').length * 200 },
     level3: { users: level3, commission: 100, total: level3.filter(u => u.status === 'validated').length * 100 }
@@ -369,10 +604,14 @@ app.get('/api/referrals/:userId', (req, res) => {
 
 // API: Demande de retrait
 app.post('/api/withdraw', (req, res) => {
-  const { userId, amount, method, details, screenshot } = req.body;
+  const { userId, amount, method, accountNumber, accountName } = req.body;
   
   const user = db.users.find(u => u.id === userId);
   if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+  
+  if (user.status !== 'validated') {
+    return res.status(403).json({ error: 'Compte non validé' });
+  }
   
   const minAmount = method === 'crypto' ? 10000 : 1000;
   if (amount < minAmount) {
@@ -383,18 +622,19 @@ app.post('/api/withdraw', (req, res) => {
     return res.status(400).json({ error: 'Solde insuffisant' });
   }
   
-  if (!screenshot) {
-    return res.status(400).json({ error: 'Capture d\'écran obligatoire' });
+  if (!accountNumber) {
+    return res.status(400).json({ error: 'Numéro de compte obligatoire' });
   }
   
   const withdrawal = {
     id: generateId(),
-    userId,
+    userId: userId,
     userName: user.name,
+    userPhone: user.phone,
     amount,
     method,
-    details,
-    screenshot,
+    accountNumber,
+    accountName: accountName || user.name,
     status: 'pending',
     createdAt: new Date().toISOString()
   };
@@ -402,7 +642,7 @@ app.post('/api/withdraw', (req, res) => {
   db.withdrawals.push(withdrawal);
   user.earnings -= amount;
   
-  res.json({ success: true, withdrawal });
+  res.json({ success: true, withdrawal, message: 'Demande de retrait envoyée. Traitement sous 24-48h.' });
 });
 
 // API: Retraits utilisateur
@@ -411,96 +651,27 @@ app.get('/api/withdrawals/user/:userId', (req, res) => {
   res.json(withdrawals);
 });
 
-// API: Initialiser paiement CinetPay (Abonnement)
-app.post('/api/payment/init', (req, res) => {
-  const { userId } = req.body;
-  const user = db.users.find(u => u.id === userId);
-  if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
-  
-  const transactionId = 'CP' + generateId();
-  const payment = {
-    id: transactionId,
-    userId,
-    amount: 4000,
-    type: 'subscription',
-    status: 'pending',
-    createdAt: new Date().toISOString()
-  };
-  
-  db.payments.push(payment);
-  res.json({ success: true, transactionId, amount: 4000 });
-});
-
-// API: Confirmer paiement
-app.post('/api/payment/confirm', (req, res) => {
-  const { transactionId, userId } = req.body;
-  
-  const payment = db.payments.find(p => p.id === transactionId);
-  if (payment) {
-    payment.status = 'completed';
-  }
-  
-  const user = db.users.find(u => u.id === userId);
-  if (user) {
-    user.status = 'validated';
-    user.balance = 4000;
-    user.subscriptionDate = new Date().toISOString();
-    
-    // Commissions parrainage
-    if (user.referredBy) {
-      const level1 = db.users.find(u => u.id === user.referredBy);
-      if (level1) {
-        level1.earnings += 500;
-        if (level1.referredBy) {
-          const level2 = db.users.find(u => u.id === level1.referredBy);
-          if (level2) {
-            level2.earnings += 200;
-            if (level2.referredBy) {
-              const level3 = db.users.find(u => u.id === level2.referredBy);
-              if (level3) level3.earnings += 100;
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  res.json({ success: true });
-});
-
-// API: Notification CinetPay (POST et GET)
-app.post('/api/payment/notify', (req, res) => {
-  console.log('CinetPay notification:', req.body);
-  res.json({ success: true });
-});
-
-app.get('/api/payment/notify', (req, res) => {
-  res.json({ success: true, message: 'Notification endpoint active' });
-});
-
-// API: Retour paiement réussi (GET et POST)
-app.get('/api/payment/return', (req, res) => {
-  res.redirect('/');
-});
-
-app.post('/api/payment/return', (req, res) => {
-  res.redirect('/');
-});
-
-// API: Annulation paiement (GET et POST)
-app.get('/api/payment/cancel', (req, res) => {
-  res.redirect('/');
-});
-
-app.post('/api/payment/cancel', (req, res) => {
-  res.redirect('/');
-});
-
 // === ADMIN APIs ===
+
+// Admin: Mettre à jour les numéros de paiement
+app.post('/api/admin/config/payment-numbers', (req, res) => {
+  const { paymentNumbers } = req.body;
+  if (paymentNumbers && Array.isArray(paymentNumbers)) {
+    db.config.paymentNumbers = paymentNumbers;
+    res.json({ success: true, paymentNumbers: db.config.paymentNumbers });
+  } else {
+    res.status(400).json({ error: 'Format invalide' });
+  }
+});
+
+// Admin: Récupérer configuration
+app.get('/api/admin/config', (req, res) => {
+  res.json(db.config);
+});
 
 // Admin: Utilisateurs en attente
 app.get('/api/admin/pending', (req, res) => {
-  const pending = db.users.filter(u => u.status === 'pending').map(u => ({ ...u, password: undefined }));
+  const pending = db.users.filter(u => u.status === 'pending' || u.status === 'pending_payment').map(u => ({ ...u, password: undefined }));
   res.json(pending);
 });
 
@@ -545,6 +716,7 @@ app.post('/api/admin/reject/:userId', (req, res) => {
   if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
   
   user.status = 'rejected';
+  user.paymentProof = null;
   res.json({ success: true });
 });
 
@@ -559,6 +731,7 @@ app.post('/api/admin/withdraw/approve/:withdrawId', (req, res) => {
   if (!withdrawal) return res.status(404).json({ error: 'Retrait non trouvé' });
   
   withdrawal.status = 'approved';
+  withdrawal.approvedAt = new Date().toISOString();
   res.json({ success: true });
 });
 
@@ -613,10 +786,10 @@ app.get('/api/admin/payments', (req, res) => {
 app.get('/api/admin/stats', (req, res) => {
   const totalUsers = db.users.filter(u => !u.isAdmin).length;
   const validatedUsers = db.users.filter(u => u.status === 'validated' && !u.isAdmin).length;
-  const pendingUsers = db.users.filter(u => u.status === 'pending').length;
+  const pendingUsers = db.users.filter(u => u.status === 'pending' || u.status === 'pending_payment').length;
   const totalEarnings = db.users.reduce((sum, u) => sum + u.earnings, 0);
   const totalWithdrawals = db.withdrawals.filter(w => w.status === 'approved').reduce((sum, w) => sum + w.amount, 0);
-  const totalPayments = db.payments.filter(p => p.status === 'completed').length * 4000;
+  const pendingWithdrawals = db.withdrawals.filter(w => w.status === 'pending').length;
   
   res.json({
     totalUsers,
@@ -624,7 +797,7 @@ app.get('/api/admin/stats', (req, res) => {
     pendingUsers,
     totalEarnings,
     totalWithdrawals,
-    totalPayments,
+    pendingWithdrawals,
     tasksCount: db.tasks.length
   });
 });

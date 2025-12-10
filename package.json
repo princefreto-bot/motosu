@@ -1,36 +1,15 @@
 {
   "name": "motosu-agencies",
   "version": "1.0.0",
-  "description": "Plateforme Motosu Agencies - Parrainage et activités vidéo",
+  "description": "Motosu Agencies - Plateforme de parrainage et micro-tâches",
   "main": "server.js",
-  "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js",
-    "build": "echo 'No build step required'"
+    "start": "node server.js"
   },
-  "keywords": [
-    "motosu",
-    "agencies",
-    "referral",
-    "mlm",
-    "cinetpay"
-  ],
-  "author": "Motosu Agencies",
-  "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "express": "^4.18.2"
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/princefreto-bot/motosu.git"
-  },
-  "bugs": {
-    "url": "https://github.com/princefreto-bot/motosu/issues"
-  },
-  "homepage": "https://github.com/princefreto-bot/motosu#readme"
+  }
 }
