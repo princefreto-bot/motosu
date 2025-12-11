@@ -15,17 +15,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'motosu-agencies-secret-key-2024';
 // MIDDLEWARE DE SÉCURITÉ
 // ============================================
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "cdn.jsdelivr.net", "cdn.tailwindcss.com", "www.youtube.com", "www.tiktok.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
-      fontSrc: ["'self'", "fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "blob:", "*"],
-      frameSrc: ["'self'", "www.youtube.com", "youtube.com", "www.tiktok.com", "tiktok.com"],
-      connectSrc: ["'self'", "*"]
-    }
-  }
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
 }));
 
 app.use(cors({
