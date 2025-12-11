@@ -45,7 +45,15 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-  <div id="app"></div>
+  <div id="app">
+    <div class="min-h-screen flex items-center justify-center">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-600">Chargement de Motosu...</p>
+        <p class="text-xs text-gray-400 mt-2">Le serveur gratuit peut prendre 30-60 secondes au premier chargement</p>
+      </div>
+    </div>
+  </div>
   <div id="modal"></div>
 
   <script>
@@ -79,10 +87,14 @@
           } 
         };
         if (data) opts.body = JSON.stringify(data);
+        console.log('API Call:', method, url);
         const res = await fetch(url, opts);
-        return res.json();
+        const json = await res.json();
+        console.log('API Response:', json);
+        return json;
       } catch (e) {
         console.error('API Error:', e);
+        toast('Erreur de connexion au serveur. Réessayez.', 'error');
         return { error: 'Erreur de connexion' };
       }
     };
@@ -212,7 +224,7 @@
             <p class="slogan mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
             <div class="prose">
               <p class="text-gray-700 leading-relaxed mb-4">
-                Motosu Agencies est une plateforme innovante dédiée à l'accompagnement des jeunes entrepreneurs et professionnels francophones en Afrique. Notre mission est de créer un environnement sécurisé et accessible où chacun peut développer son réseau, apprendre à travers des contenus interactifs et bénéficier d'opportunités de croissance progressive.
+                Motosu Agencies est une plateforme innovante dédiée �� l'accompagnement des jeunes entrepreneurs et professionnels francophones en Afrique. Notre mission est de créer un environnement sécurisé et accessible où chacun peut développer son réseau, apprendre à travers des contenus interactifs et bénéficier d'opportunités de croissance progressive.
               </p>
               <p class="text-gray-700 leading-relaxed mb-4">
                 Nous croyons à l'importance de l'engagement et de la persévérance : chaque action sur notre plateforme contribue à la progression personnelle et professionnelle de nos utilisateurs.
@@ -1520,7 +1532,15 @@
 
     // Init
     async function init() {
-      state.config = await api('/api/config');
+      console.log('Initialisation de Motosu...');
+      
+      try {
+        state.config = await api('/api/config');
+        console.log('Config chargée:', state.config);
+      } catch (e) {
+        console.error('Erreur chargement config:', e);
+        state.config = { paymentNumbers: [], withdrawMethods: [], subscriptionAmount: 4000 };
+      }
       
       const urlParams = new URLSearchParams(window.location.search);
       const ref = urlParams.get('ref');
@@ -1531,9 +1551,12 @@
       }
 
       const userId = localStorage.getItem('userId');
+      console.log('UserId stocké:', userId);
+      
       if (userId) {
         try {
           const user = await api(`/api/user/${userId}`);
+          console.log('Utilisateur récupéré:', user);
           if (user && !user.error) {
             state.currentUser = user;
             if (user.isAdmin) {
@@ -1545,12 +1568,19 @@
             }
             return;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error('Erreur récupération user:', e);
+        }
       }
       navigate('login');
     }
 
-    init();
+    // Démarrer l'app
+    console.log('Démarrage de Motosu Agencies...');
+    init().catch(e => {
+      console.error('Erreur init:', e);
+      navigate('login');
+    });
   </script>
 </body>
 </html>
