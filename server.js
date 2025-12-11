@@ -42,6 +42,13 @@ app.use(express.urlencoded({ extended: true }));
 // ============================================
 const MONGO_URI = process.env.MONGO_URI;
 
+if (!MONGO_URI) {
+  console.error('❌ MONGO_URI non définie! Ajoutez-la dans les variables d\'environnement.');
+  process.exit(1);
+}
+
+console.log('🔄 Connexion à MongoDB Atlas...');
+
 mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
