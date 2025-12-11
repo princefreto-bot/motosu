@@ -66,10 +66,17 @@
 
     // Utilitaires
     const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => document.querySelectorAll(sel);
+    const $ = (sel) => document.querySelectorAll(sel);
     const api = async (url, method = 'GET', data = null) => {
       try {
-        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        const token = localStorage.getItem('authToken');
+        const opts = { 
+          method, 
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+          } 
+        };
         if (data) opts.body = JSON.stringify(data);
         const res = await fetch(url, opts);
         return res.json();
@@ -78,6 +85,9 @@
         return { error: 'Erreur de connexion' };
       }
     };
+    
+    // Helper pour obtenir l'ID (MongoDB utilise _id)
+    const getId = (obj) => obj?._id || obj?.id;
 
     const toast = (msg, type = 'info') => {
       const div = document.createElement('div');
@@ -725,19 +735,22 @@
 
     async function navigate(page) {
       state.currentPage = page;
+      const userId = getId(state.currentUser);
       
       if (state.currentUser && state.currentUser.status === 'validated') {
         if (['dashboard', 'referrals', 'withdraw'].includes(page)) {
-          state.referrals = await api(`/api/referrals/${state.currentUser.id}`);
+          state.referrals = await api(`/api/referrals/${userId}`);
         }
         if (page === 'tasks') {
-          state.tasks = await api('/api/tasks');
+          const tasksData = await api('/api/tasks');
+          state.tasks = Array.isArray(tasksData) ? tasksData.map(t => ({...t, id: t._id || t.id})) : [];
         }
         if (page === 'videos') {
-          state.videos = await api('/api/videos');
+          const videosData = await api('/api/videos');
+          state.videos = Array.isArray(videosData) ? videosData.map(v => ({...v, id: v._id || v.id})) : [];
         }
         if (page === 'withdraw') {
-          state.withdrawals = await api(`/api/withdrawals/user/${state.currentUser.id}`);
+          state.withdrawals = await api(`/api/withdrawals/user/${userId}`);
         }
       }
       
@@ -765,7 +778,8 @@
             toast(res.error, 'error');
           } else {
             state.currentUser = res.user;
-            localStorage.setItem('userId', res.user.id);
+            localStorage.setItem('userId', getId(res.user));
+            if (res.token) localStorage.setItem('authToken', res.token);
             if (res.user.isAdmin) {
               navigate('admin');
             } else if (res.user.status === 'validated') {
@@ -793,7 +807,8 @@
             toast(res.error, 'error');
           } else {
             state.currentUser = res.user;
-            localStorage.setItem('userId', res.user.id);
+            localStorage.setItem('userId', getId(res.user));
+            if (res.token) localStorage.setItem('authToken', res.token);
             localStorage.removeItem('referralCode');
             navigate('pending');
             toast('Inscription réussie! Veuillez activer votre compte.', 'success');
@@ -908,7 +923,7 @@
       const video = state.videos.find(v => v.id === videoId);
       
       const res = await api(`/api/videos/${videoId}/watch`, 'POST', {
-        userId: state.currentUser.id,
+        userId: getId(state.currentUser),
         watchTime: video.duration * 60
       });
       
@@ -917,7 +932,7 @@
       } else {
         toast(res.message, 'success');
         closeModal();
-        state.currentUser = await api(`/api/user/${state.currentUser.id}`);
+        state.currentUser = await api(`/api/user/${getId(state.currentUser)}`);
         navigate('videos');
       }
     }
@@ -1122,7 +1137,7 @@
       }
       
       const res = await api(`/api/tasks/${taskId}/complete`, 'POST', {
-        userId: state.currentUser.id,
+        userId: getId(state.currentUser),
         answers
       });
       
@@ -1131,7 +1146,7 @@
       } else {
         toast(res.message, 'success');
         closeModal();
-        state.currentUser = await api(`/api/user/${state.currentUser.id}`);
+        state.currentUser = await api(`/api/user/${getId(state.currentUser)}`);
         navigate('tasks');
       }
     }
@@ -1207,6 +1222,7 @@
     function logout() {
       state.currentUser = null;
       localStorage.removeItem('userId');
+      localStorage.removeItem('authToken');
       navigate('login');
       toast('Déconnexion réussie', 'info');
     }
