@@ -26,19 +26,22 @@
     .stat-green{background:linear-gradient(135deg,#10b981,#059669);color:white}
     .modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px}
     .modal-content{background:white;border-radius:16px;padding:24px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto}
-    .option-btn{display:block;width:100%;padding:12px 16px;margin:8px 0;background:#f3f4f6;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:all .2s;text-align:left}
-    .option-btn:hover{background:#e5e7eb}
+    .option-btn{display:block;width:100%;padding:12px 16px;margin:6px 0;background:#f3f4f6;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:all .2s;text-align:left}
+    .option-btn:hover{background:#e5e7eb;border-color:#d1d5db}
     .option-btn.selected{background:#3b82f6;color:white;border-color:#1d4ed8}
-    .check-item{display:flex;align-items:center;padding:12px 16px;margin:8px 0;background:#f3f4f6;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:all .2s}
+    .check-item{display:flex;align-items:center;padding:12px 16px;margin:6px 0;background:#f3f4f6;border:2px solid transparent;border-radius:8px;cursor:pointer;transition:all .2s}
     .check-item:hover{background:#e5e7eb}
     .check-item.selected{background:#10b981;color:white;border-color:#059669}
-    .category-select{padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;background:white;min-width:120px}
+    .category-select{padding:10px 12px;border:2px solid #d1d5db;border-radius:6px;background:white;min-width:140px;font-size:14px}
+    .category-select:focus{border-color:#3b82f6;outline:none}
     .progress-bar{height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden}
     .progress-fill{height:100%;background:#10b981;transition:width .3s}
     .video-card{border-radius:12px;overflow:hidden;background:white;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
-    .video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden}
+    .video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;background:#000}
     .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%}
     .slogan{background:linear-gradient(135deg,#f97316,#ea580c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800}
+    .question-container{background:#f9fafb;border-radius:12px;padding:16px;margin-bottom:16px}
+    .question-title{font-weight:600;color:#374151;margin-bottom:12px;font-size:15px}
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -50,13 +53,14 @@
     let state = {
       currentUser: null,
       currentPage: 'login',
-      config: { paymentNumbers: [], subscriptionAmount: 4000 },
+      config: { paymentNumbers: [], withdrawMethods: [], subscriptionAmount: 4000 },
       tasks: [],
       videos: [],
       currentTask: null,
       currentVideo: null,
       referrals: null,
       withdrawals: [],
+      surveyAnswers: {},
       adminData: { pending: [], users: [], withdrawals: [], tasks: [], videos: [], payments: [], stats: {}, config: {} }
     };
 
@@ -168,7 +172,7 @@
                   <span class="text-orange-500 text-xl">✓</span>
                   <div>
                     <p class="font-semibold">Retraits faciles</p>
-                    <p class="text-sm text-gray-500">Mobile Money dès 1000 FCFA, Crypto dès 10000 FCFA</p>
+                    <p class="text-sm text-gray-500">Moov Money et Mix by Yas dès 1000 FCFA</p>
                   </div>
                 </li>
               </ul>
@@ -313,7 +317,7 @@
 
             <div class="card">
               <h2 class="font-bold mb-3">💡 Actions rapides</h2>
-              <div class="grid grid-cols-3 gap-3">
+              <div class="grid grid-cols-4 gap-3">
                 <button onclick="navigate('tasks')" class="bg-green-100 text-green-700 p-4 rounded-lg text-center hover:bg-green-200 transition">
                   <p class="text-2xl mb-1">📋</p>
                   <p class="font-semibold text-xs">Tâches</p>
@@ -325,6 +329,10 @@
                 <button onclick="navigate('referrals')" class="bg-blue-100 text-blue-700 p-4 rounded-lg text-center hover:bg-blue-200 transition">
                   <p class="text-2xl mb-1">👥</p>
                   <p class="font-semibold text-xs">Parrainer</p>
+                </button>
+                <button onclick="navigate('withdraw')" class="bg-orange-100 text-orange-700 p-4 rounded-lg text-center hover:bg-orange-200 transition">
+                  <p class="text-2xl mb-1">💰</p>
+                  <p class="font-semibold text-xs">Retrait</p>
                 </button>
               </div>
             </div>
@@ -585,18 +593,15 @@
                 <form id="withdrawForm">
                   <label class="block text-sm font-medium text-gray-700 mb-2">Méthode de retrait</label>
                   <select id="withdrawMethod" class="input">
-                    <option value="orange">Orange Money (min 1000 FCFA)</option>
-                    <option value="mtn">MTN Mobile Money (min 1000 FCFA)</option>
-                    <option value="wave">Wave (min 1000 FCFA)</option>
                     <option value="moov">Moov Money (min 1000 FCFA)</option>
-                    <option value="crypto">Crypto USDT TRC20 (min 10000 FCFA)</option>
+                    <option value="mix">Mix by Yas (min 1000 FCFA)</option>
                   </select>
                   
                   <label class="block text-sm font-medium text-gray-700 mb-2">Montant à retirer</label>
                   <input type="number" id="withdrawAmount" class="input" placeholder="Montant en FCFA" min="1000" required>
                   
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Numéro ou Adresse de réception</label>
-                  <input type="text" id="withdrawAccount" class="input" placeholder="+225 XX XX XX XX XX ou adresse USDT" required>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Numéro de réception</label>
+                  <input type="text" id="withdrawAccount" class="input" placeholder="+225 XX XX XX XX XX" required>
                   
                   <label class="block text-sm font-medium text-gray-700 mb-2">Nom du titulaire</label>
                   <input type="text" id="withdrawName" class="input" placeholder="Nom complet du compte" value="${state.currentUser?.name || ''}">
@@ -617,7 +622,7 @@
                     <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p class="font-semibold">${w.amount} FCFA</p>
-                        <p class="text-xs text-gray-500">${w.method} • ${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p>
+                        <p class="text-xs text-gray-500">${w.method === 'moov' ? 'Moov Money' : 'Mix by Yas'} • ${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p>
                       </div>
                       <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(w.status)}">${getStatusLabel(w.status)}</span>
                     </div>
@@ -661,7 +666,7 @@
           <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
             <h1 class="text-lg font-bold text-blue-600">🚀 Motosu</h1>
             <div class="flex items-center gap-3">
-              <span class="text-sm text-gray-500">${state.currentUser?.earnings || 0} FCFA</span>
+              <span class="text-sm font-bold text-orange-600">${state.currentUser?.earnings || 0} FCFA</span>
               <button onclick="logout()" class="text-red-500 text-sm">Quitter</button>
             </div>
           </div>
@@ -868,7 +873,7 @@
             
             <div class="flex gap-3">
               <button onclick="closeModal()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold">Annuler</button>
-              <button id="validateVideoBtn" onclick="validateVideo('${video.id}')" class="flex-1 btn-success py-3" disabled>
+              <button id="validateVideoBtn" onclick="validateVideo('${video.id}')" class="flex-1 btn-success py-3 opacity-50" disabled>
                 Valider (+${video.reward} FCFA)
               </button>
             </div>
@@ -876,9 +881,7 @@
         </div>
       `;
       
-      // Démarrer le timer
       let watchTime = 0;
-      const totalTime = video.duration * 60;
       
       window.videoTimer = setInterval(() => {
         watchTime++;
@@ -925,6 +928,8 @@
       if (!task) return;
       
       state.currentTask = task;
+      state.surveyAnswers = {};
+      
       const modal = $('#modal');
       modal.innerHTML = renderTaskModal(task);
     }
@@ -934,19 +939,26 @@
       
       if (task.type === 'sondage') {
         content = `
-          <div class="space-y-6" id="surveyQuestions">
+          <div id="surveyContainer">
             ${task.content.questions.map((q, i) => `
-              <div class="question-block" data-question="${i}">
-                <p class="font-semibold mb-3 text-gray-800">${i + 1}. ${q.question}</p>
+              <div class="question-container" id="question-${i}">
+                <p class="question-title">${i + 1}. ${q.question}</p>
                 <div class="space-y-2">
                   ${q.options.map((opt, j) => `
-                    <button type="button" class="option-btn" data-question="${i}" data-value="${opt}" onclick="selectSurveyOption(this, ${i})">
+                    <button type="button" 
+                      class="option-btn" 
+                      data-question="${i}" 
+                      data-option="${j}"
+                      onclick="selectOption(${i}, ${j}, '${opt.replace(/'/g, "\\'")}')">
                       ${opt}
                     </button>
                   `).join('')}
                 </div>
               </div>
             `).join('')}
+          </div>
+          <div id="surveyProgress" class="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p class="text-sm text-blue-800">Réponses: <span id="answeredCount">0</span>/${task.content.questions.length}</p>
           </div>
         `;
       } else if (task.type === 'verification') {
@@ -956,9 +968,9 @@
           </div>
           <div class="space-y-2" id="verificationItems">
             ${task.content.items.map((item, i) => `
-              <div class="check-item" data-index="${i}" onclick="toggleVerificationItem(this)">
+              <div class="check-item" data-index="${i}" onclick="toggleCheck(this, ${i})">
                 <span class="flex-1">${item.text}</span>
-                <span class="checkmark hidden text-xl">✓</span>
+                <span class="checkmark text-xl ml-2" style="display:none">✓</span>
               </div>
             `).join('')}
           </div>
@@ -972,7 +984,7 @@
             ${task.content.items.map((item, i) => `
               <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg gap-3">
                 <span class="font-medium flex-1 text-sm">${item.name}</span>
-                <select class="category-select" data-index="${i}">
+                <select class="category-select" data-index="${i}" onchange="updateClassification(${i}, this.value)">
                   <option value="">Choisir...</option>
                   ${task.content.categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                 </select>
@@ -1016,15 +1028,43 @@
       `;
     }
 
-    function selectSurveyOption(btn, questionIndex) {
-      $$(`[data-question="${questionIndex}"].option-btn`).forEach(el => el.classList.remove('selected'));
-      btn.classList.add('selected');
+    // Sélectionner une option de sondage
+    function selectOption(questionIndex, optionIndex, value) {
+      // Désélectionner toutes les options de cette question
+      $$(`[data-question="${questionIndex}"]`).forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      
+      // Sélectionner l'option cliquée
+      const btn = $(`[data-question="${questionIndex}"][data-option="${optionIndex}"]`);
+      if (btn) {
+        btn.classList.add('selected');
+      }
+      
+      // Sauvegarder la réponse
+      state.surveyAnswers[questionIndex] = value;
+      
+      // Mettre à jour le compteur
+      const countEl = $('#answeredCount');
+      if (countEl) {
+        countEl.textContent = Object.keys(state.surveyAnswers).length;
+      }
     }
 
-    function toggleVerificationItem(item) {
-      item.classList.toggle('selected');
-      const checkmark = item.querySelector('.checkmark');
-      checkmark.classList.toggle('hidden');
+    // Toggle vérification
+    function toggleCheck(element, index) {
+      element.classList.toggle('selected');
+      const checkmark = element.querySelector('.checkmark');
+      if (element.classList.contains('selected')) {
+        checkmark.style.display = 'block';
+      } else {
+        checkmark.style.display = 'none';
+      }
+    }
+
+    // Mettre à jour classification
+    function updateClassification(index, value) {
+      state.surveyAnswers[index] = value;
     }
 
     function closeModal(event) {
@@ -1033,6 +1073,7 @@
       $('#modal').innerHTML = '';
       state.currentTask = null;
       state.currentVideo = null;
+      state.surveyAnswers = {};
     }
 
     async function submitTask(taskId) {
@@ -1042,15 +1083,12 @@
       let answers;
       
       if (task.type === 'sondage') {
-        answers = [];
-        task.content.questions.forEach((_, i) => {
-          const selected = $(`.option-btn.selected[data-question="${i}"]`);
-          answers.push(selected ? selected.dataset.value : null);
-        });
+        answers = state.surveyAnswers;
         
         // Vérifier que toutes les questions ont une réponse
-        if (answers.some(a => a === null)) {
-          toast('Veuillez répondre à toutes les questions', 'error');
+        const answeredCount = Object.keys(answers).length;
+        if (answeredCount < task.content.questions.length) {
+          toast(`Veuillez répondre à toutes les questions (${answeredCount}/${task.content.questions.length})`, 'error');
           return;
         }
       } else if (task.type === 'verification') {
@@ -1298,7 +1336,7 @@
             <div>
               <p class="font-bold text-xl text-orange-600">${w.amount} FCFA</p>
               <p class="font-semibold">${w.userName}</p>
-              <p class="text-sm text-gray-500">${w.method.toUpperCase()}</p>
+              <p class="text-sm text-gray-500">${w.method === 'moov' ? 'Moov Money' : 'Mix by Yas'}</p>
               <p class="text-sm text-gray-600">📱 ${w.accountNumber}</p>
               <p class="text-sm text-gray-500">Nom: ${w.accountName}</p>
               <p class="text-xs text-gray-400">${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p>
