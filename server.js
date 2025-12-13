@@ -1046,7 +1046,7 @@ app.post('/api/admin/validate/:userId', async (req, res) => {
     if (user.referredBy) {
       const level1 = await User.findById(user.referredBy);
       if (level1) {
-        level1.earnings += 22000;
+        level1.earnings += 2000;
         await level1.save();
 
         if (level1.referredBy) {
