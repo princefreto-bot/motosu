@@ -935,22 +935,8 @@ app.post('/api/withdraw', async (req, res) => {
       return res.status(403).json({ error: 'Compte non validé' });
     }
 
-    // Vérifier le nombre de parrainages
-    const referrals = await User.find({ referredBy: user._id, status: 'validated' });
-    const minReferrals = await Config.findOne({ key: 'minReferralsForWithdraw' });
-    const requiredReferrals = minReferrals?.value || 4;
-
-    if (referrals.length < requiredReferrals) {
-      return res.status(400).json({
-        error: 'Invitez plus d\'amis pour débloquer les retraits! Partagez, Gagnez, Grandissez ensemble.',
-        needMoreReferrals: true,
-        current: referrals.length,
-        required: requiredReferrals
-      });
-    }
-
-    if (amount < 1000) {
-      return res.status(400).json({ error: 'Minimum 1000 FCFA pour les retraits' });
+    if (amount < 15000) {
+      return res.status(400).json({ error: 'Minimum 15 000 FCFA pour les retraits' });
     }
 
     if (amount > user.earnings) {
@@ -1060,19 +1046,19 @@ app.post('/api/admin/validate/:userId', async (req, res) => {
     if (user.referredBy) {
       const level1 = await User.findById(user.referredBy);
       if (level1) {
-        level1.earnings += 500;
+        level1.earnings += 22000;
         await level1.save();
 
         if (level1.referredBy) {
           const level2 = await User.findById(level1.referredBy);
           if (level2) {
-            level2.earnings += 200;
+            level2.earnings += 800;
             await level2.save();
 
             if (level2.referredBy) {
               const level3 = await User.findById(level2.referredBy);
               if (level3) {
-                level3.earnings += 100;
+                level3.earnings += 400;
                 await level3.save();
               }
             }
