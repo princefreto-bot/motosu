@@ -65,12 +65,14 @@
       config: { paymentNumbers: [], withdrawMethods: [], subscriptionAmount: 4000 },
       tasks: [],
       videos: [],
+      formations: [],
+      taskStatus: { isActive: true, paused: false, message: '' },
       currentTask: null,
       currentVideo: null,
       referrals: null,
       withdrawals: [],
       surveyAnswers: {},
-      adminData: { pending: [], users: [], withdrawals: [], tasks: [], videos: [], payments: [], stats: {}, config: {} }
+      adminData: { pending: [], users: [], withdrawals: [], tasks: [], videos: [], formations: [], payments: [], stats: {}, config: {} }
     };
 
     // Utilitaires - CORRIGÉ: $ pour querySelector, $$ pour querySelectorAll
@@ -366,7 +368,8 @@
 
       tasks: () => {
         const completedToday = state.currentUser?.tasksCompletedToday?.length || 0;
-        const availableTasks = state.tasks.filter(t => !state.currentUser?.completedTasks?.includes(getId(t)));
+        const availableTasks = state.tasks.filter(t => !state.currentUser?.tasksCompletedToday?.includes(getId(t)));
+        const isPaused = state.taskStatus?.paused;
         
         return `
           <div class="min-h-screen bg-gray-100">
@@ -375,16 +378,30 @@
               <h1 class="text-xl font-bold mb-2">📋 Micro-Tâches</h1>
               <p class="text-sm text-gray-500 mb-4">Complétez des tâches et gagnez de l'argent réel!</p>
               
-              <div class="bg-white rounded-lg p-4 mb-4 shadow-sm">
-                <div class="flex justify-between items-center mb-2">
-                  <span class="font-semibold">Aujourd'hui</span>
-                  <span class="text-blue-600 font-bold">${completedToday}/10 tâches</span>
+              ${isPaused ? `
+                <div class="bg-orange-50 border-2 border-orange-300 rounded-xl p-6 mb-4 text-center">
+                  <p class="text-4xl mb-3">⏸️</p>
+                  <h3 class="font-bold text-orange-700 text-lg">Pause en cours</h3>
+                  <p class="text-orange-600 mt-2">${state.taskStatus.message}</p>
+                  <p class="text-sm text-gray-500 mt-3">Profitez de ce temps pour regarder des vidéos ou inviter des amis!</p>
+                  <div class="flex gap-3 justify-center mt-4">
+                    <button onclick="navigate('videos')" class="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">🎬 Voir les vidéos</button>
+                    <button onclick="navigate('referrals')" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">👥 Parrainer</button>
+                  </div>
                 </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: ${completedToday * 10}%"></div>
+              ` : `
+                <div class="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="font-semibold">Aujourd'hui</span>
+                    <span class="text-blue-600 font-bold">${completedToday}/10 tâches</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${completedToday * 10}%"></div>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-2">${10 - completedToday} tâches restantes aujourd'hui</p>
+                  ${state.taskStatus?.message ? `<p class="text-xs text-green-600 mt-1">✓ ${state.taskStatus.message}</p>` : ''}
                 </div>
-                <p class="text-xs text-gray-500 mt-2">${10 - completedToday} tâches restantes aujourd'hui</p>
-              </div>
+              `}
               
               ${availableTasks.length === 0 ? `
                 <div class="card text-center py-8">
@@ -498,6 +515,50 @@
           </div>
         `;
       },
+
+      formations: () => `
+        <div class="min-h-screen bg-gray-100">
+          ${renderNav()}
+          <div class="p-4 max-w-4xl mx-auto">
+            <h1 class="text-xl font-bold mb-2">📚 Formations</h1>
+            <p class="text-sm text-gray-500 mb-4">Développez vos compétences avec nos formations gratuites!</p>
+            
+            ${state.formations.length === 0 ? `
+              <div class="card text-center py-12">
+                <p class="text-5xl mb-4">📖</p>
+                <p class="font-bold text-gray-600 text-lg">Aucune formation disponible</p>
+                <p class="text-gray-500 text-sm mt-2">De nouvelles formations seront bientôt ajoutées.<br>Revenez régulièrement!</p>
+              </div>
+            ` : `
+              <div class="grid gap-4">
+                ${state.formations.map(formation => `
+                  <div class="card hover:shadow-lg transition">
+                    <div class="flex gap-4">
+                      ${formation.image ? `
+                        <div class="w-24 h-24 flex-shrink-0">
+                          <img src="${formation.image}" alt="${formation.title}" class="w-full h-full object-cover rounded-lg" onerror="this.style.display='none'">
+                        </div>
+                      ` : `
+                        <div class="w-24 h-24 flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                          <span class="text-3xl">📚</span>
+                        </div>
+                      `}
+                      <div class="flex-1">
+                        <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">${formation.category || 'Général'}</span>
+                        <h3 class="font-bold mt-1">${formation.title}</h3>
+                        <p class="text-sm text-gray-500 mt-1 line-clamp-2">${formation.description}</p>
+                        <a href="${formation.link}" target="_blank" rel="noopener noreferrer" class="inline-block mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">
+                          🎓 Accéder à la formation
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      `,
 
       referrals: () => `
         <div class="min-h-screen bg-gray-100">
@@ -659,6 +720,8 @@
               <button onclick="setAdminTab('users')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-users">👥 Utilisateurs</button>
               <button onclick="setAdminTab('withdrawals')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-withdrawals">💸 Retraits</button>
               <button onclick="setAdminTab('videos')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-videos">🎬 Vidéos</button>
+              <button onclick="setAdminTab('formations')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-formations">📚 Formations</button>
+              <button onclick="setAdminTab('tasks')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-tasks">📋 Tâches</button>
               <button onclick="setAdminTab('config')" class="admin-tab px-4 py-2 bg-white rounded-lg text-sm whitespace-nowrap" id="tab-config">⚙️ Config</button>
             </div>
             
@@ -683,6 +746,7 @@
             <button onclick="navigate('dashboard')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'dashboard' ? 'tab-active' : 'text-gray-500'}">🏠 Accueil</button>
             <button onclick="navigate('tasks')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'tasks' ? 'tab-active' : 'text-gray-500'}">📋 Tâches</button>
             <button onclick="navigate('videos')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'videos' ? 'tab-active' : 'text-gray-500'}">🎬 Vidéos</button>
+            <button onclick="navigate('formations')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'formations' ? 'tab-active' : 'text-gray-500'}">📚 Formations</button>
             <button onclick="navigate('referrals')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'referrals' ? 'tab-active' : 'text-gray-500'}">👥 Parrainage</button>
             <button onclick="navigate('withdraw')" class="flex-1 py-3 text-xs text-center ${state.currentPage === 'withdraw' ? 'tab-active' : 'text-gray-500'}">💰 Retrait</button>
           </div>
@@ -741,12 +805,27 @@
           state.referrals = await api(`/api/referrals/${userId}`);
         }
         if (page === 'tasks') {
-          const tasksData = await api('/api/tasks');
-          state.tasks = Array.isArray(tasksData) ? tasksData : [];
+          // Charger le statut des tâches (pause ou actif)
+          const taskStatusData = await api(`/api/tasks/daily/${userId}`);
+          state.taskStatus = {
+            paused: taskStatusData.paused || false,
+            message: taskStatusData.message || ''
+          };
+          state.tasks = Array.isArray(taskStatusData.tasks) ? taskStatusData.tasks : [];
+          
+          // Si pas en pause, aussi récupérer toutes les tâches
+          if (!state.taskStatus.paused && state.tasks.length === 0) {
+            const allTasks = await api('/api/tasks');
+            state.tasks = Array.isArray(allTasks) ? allTasks : [];
+          }
         }
         if (page === 'videos') {
           const videosData = await api('/api/videos');
           state.videos = Array.isArray(videosData) ? videosData : [];
+        }
+        if (page === 'formations') {
+          const formationsData = await api('/api/formations');
+          state.formations = Array.isArray(formationsData) ? formationsData : [];
         }
         if (page === 'withdraw') {
           state.withdrawals = await api(`/api/withdrawals/user/${userId}`);
@@ -1325,6 +1404,14 @@
       } else if (tab === 'videos') {
         state.adminData.videos = await api('/api/admin/videos');
         content.innerHTML = renderAdminVideos();
+      } else if (tab === 'formations') {
+        state.adminData.formations = await api('/api/admin/formations');
+        content.innerHTML = renderAdminFormations();
+      } else if (tab === 'tasks') {
+        state.adminData.tasks = await api('/api/admin/tasks');
+        const taskStatus = await api('/api/tasks/status');
+        state.adminData.taskCycle = taskStatus;
+        content.innerHTML = renderAdminTasks();
       } else if (tab === 'config') {
         state.adminData.config = await api('/api/admin/config');
         content.innerHTML = renderAdminConfig();
@@ -1526,6 +1613,142 @@
       `;
     }
 
+    // Render Admin Formations
+    function renderAdminFormations() {
+      return `
+        <div class="card mb-4">
+          <h2 class="font-bold text-lg mb-4">➕ Ajouter une formation</h2>
+          <form id="addFormationForm">
+            <input type="text" id="formationTitle" class="input" placeholder="Titre de la formation" required>
+            <textarea id="formationDescription" class="input" placeholder="Description" rows="2" required></textarea>
+            <input type="text" id="formationLink" class="input" placeholder="Lien de la formation (URL)" required>
+            <input type="text" id="formationCategory" class="input" placeholder="Catégorie (ex: Marketing, Finance, Tech...)" value="Général">
+            
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Image de la formation (optionnel)</label>
+              <input type="file" id="formationImage" accept="image/*" class="input">
+              <div id="formationImagePreview" class="mt-2 hidden">
+                <img id="formationPreviewImg" class="w-24 h-24 object-cover rounded-lg border">
+              </div>
+            </div>
+            
+            <button type="submit" class="btn-primary w-full">Ajouter la formation</button>
+          </form>
+        </div>
+        
+        <div class="card">
+          <h2 class="font-bold text-lg mb-4">📚 Formations existantes (${state.adminData.formations?.length || 0})</h2>
+          ${!state.adminData.formations || state.adminData.formations.length === 0 ? 
+            '<p class="text-gray-500 text-sm text-center py-4">Aucune formation</p>' : `
+            <div class="space-y-3">
+              ${state.adminData.formations.map(f => `
+                <div class="flex gap-3 p-3 bg-gray-50 rounded-lg">
+                  ${f.image ? `
+                    <img src="${f.image}" class="w-16 h-16 object-cover rounded-lg flex-shrink-0" onerror="this.style.display='none'">
+                  ` : `
+                    <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span class="text-2xl">📚</span>
+                    </div>
+                  `}
+                  <div class="flex-1">
+                    <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-600">${f.category || 'Général'}</span>
+                    <p class="font-semibold mt-1">${f.title}</p>
+                    <p class="text-xs text-gray-500 truncate">${f.description}</p>
+                    <a href="${f.link}" target="_blank" class="text-xs text-blue-500 hover:underline">🔗 Voir le lien</a>
+                  </div>
+                  <button onclick="deleteFormation('${getId(f)}')" class="text-red-500 text-xl self-start">🗑️</button>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+    
+    // Render Admin Tasks avec cycle de pause
+    function renderAdminTasks() {
+      const cycle = state.adminData.taskCycle || { isActive: true, activeDays: 2, pauseDays: 3 };
+      
+      return `
+        <div class="card mb-4">
+          <h2 class="font-bold text-lg mb-4">⏱️ Cycle des tâches</h2>
+          <div class="p-4 rounded-lg ${cycle.isActive ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'} mb-4">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl">${cycle.isActive ? '✅' : '⏸️'}</span>
+              <div>
+                <p class="font-bold ${cycle.isActive ? 'text-green-700' : 'text-orange-700'}">
+                  ${cycle.isActive ? 'Tâches actives' : 'Pause en cours'}
+                </p>
+                <p class="text-sm text-gray-600">${cycle.message || ''}</p>
+              </div>
+            </div>
+          </div>
+          
+          <form id="taskCycleForm" class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Jours actifs</label>
+              <input type="number" id="activeDays" class="input mb-0" value="${cycle.activeDays || 2}" min="1" max="7">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Jours de pause</label>
+              <input type="number" id="pauseDays" class="input mb-0" value="${cycle.pauseDays || 3}" min="1" max="7">
+            </div>
+            <div class="col-span-2">
+              <button type="submit" class="btn-primary w-full">Mettre à jour le cycle</button>
+            </div>
+          </form>
+          <p class="text-xs text-gray-500 mt-2 text-center">Cycle actuel: ${cycle.activeDays || 2} jours actifs, puis ${cycle.pauseDays || 3} jours de pause</p>
+        </div>
+        
+        <div class="card">
+          <h2 class="font-bold text-lg mb-4">📋 Tâches existantes (${state.adminData.tasks?.length || 0})</h2>
+          ${!state.adminData.tasks || state.adminData.tasks.length === 0 ? 
+            '<p class="text-gray-500 text-sm text-center py-4">Aucune tâche</p>' : `
+            <div class="space-y-2">
+              ${state.adminData.tasks.map(t => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <span class="text-xs px-2 py-1 rounded-full ${getTaskTypeColor(t.type)}">${getTaskTypeLabel(t.type)}</span>
+                    <p class="font-semibold mt-1">${t.title}</p>
+                    <p class="text-xs text-gray-500">${t.reward} FCFA • ${t.isActive !== false ? '✅ Actif' : '❌ Inactif'}</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button onclick="toggleTask('${getId(t)}')" class="text-xl">${t.isActive !== false ? '⏸️' : '▶️'}</button>
+                    <button onclick="deleteTask('${getId(t)}')" class="text-red-500 text-xl">🗑️</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+    
+    // Gestion des formations
+    async function deleteFormation(formationId) {
+      if (!confirm('Supprimer cette formation ?')) return;
+      await api(`/api/admin/formations/${formationId}`, 'DELETE');
+      toast('Formation supprimée', 'info');
+      setAdminTab('formations');
+    }
+    
+    // Gestion du cycle des tâches
+    async function toggleTask(taskId) {
+      const task = state.adminData.tasks.find(t => getId(t) === taskId);
+      if (!task) return;
+      
+      await api(`/api/admin/tasks/${taskId}`, 'PUT', { isActive: task.isActive === false });
+      toast('Tâche mise à jour', 'success');
+      setAdminTab('tasks');
+    }
+    
+    async function deleteTask(taskId) {
+      if (!confirm('Supprimer cette tâche ?')) return;
+      await api(`/api/admin/tasks/${taskId}`, 'DELETE');
+      toast('Tâche supprimée', 'info');
+      setAdminTab('tasks');
+    }
+
     // Admin functions
     function addPaymentNumber() {
       state.adminData.config.paymentNumbers.push({ operator: '', number: '', name: '' });
@@ -1588,7 +1811,7 @@
       setAdminTab('videos');
     }
 
-    // Attach video form handler
+    // Attach form handlers
     document.addEventListener('submit', async function(e) {
       if (e.target.id === 'addVideoForm') {
         e.preventDefault();
@@ -1605,6 +1828,69 @@
         } else {
           toast('Vidéo ajoutée!', 'success');
           setAdminTab('videos');
+        }
+      }
+      
+      // Formation form
+      if (e.target.id === 'addFormationForm') {
+        e.preventDefault();
+        
+        let imageBase64 = '';
+        const imageFile = $('#formationImage')?.files[0];
+        
+        if (imageFile) {
+          imageBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(imageFile);
+          });
+        }
+        
+        const res = await api('/api/admin/formations', 'POST', {
+          title: $('#formationTitle').value,
+          description: $('#formationDescription').value,
+          link: $('#formationLink').value,
+          category: $('#formationCategory').value || 'Général',
+          image: imageBase64
+        });
+        
+        if (res.error) {
+          toast(res.error, 'error');
+        } else {
+          toast('Formation ajoutée!', 'success');
+          setAdminTab('formations');
+        }
+      }
+      
+      // Task cycle form
+      if (e.target.id === 'taskCycleForm') {
+        e.preventDefault();
+        
+        const res = await api('/api/admin/tasks/cycle', 'POST', {
+          activeDays: parseInt($('#activeDays').value),
+          pauseDays: parseInt($('#pauseDays').value)
+        });
+        
+        if (res.error) {
+          toast(res.error, 'error');
+        } else {
+          toast('Cycle mis à jour!', 'success');
+          setAdminTab('tasks');
+        }
+      }
+    });
+    
+    // Formation image preview
+    document.addEventListener('change', function(e) {
+      if (e.target.id === 'formationImage') {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            $('#formationPreviewImg').src = reader.result;
+            $('#formationImagePreview').classList.remove('hidden');
+          };
+          reader.readAsDataURL(file);
         }
       }
     });

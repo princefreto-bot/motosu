@@ -99,10 +99,31 @@ const taskSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   reward: { type: Number, required: true },
-  content: { type: mongoose.Schema.Types.Mixed, required: true }
+  content: { type: mongoose.Schema.Types.Mixed, required: true },
+  isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
 const Task = mongoose.model('Task', taskSchema);
+
+// Schéma Formation
+const formationSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  link: { type: String, required: true },
+  image: { type: String, default: '' },
+  category: { type: String, default: 'Général' },
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true });
+
+const Formation = mongoose.model('Formation', formationSchema);
+
+// Schéma Configuration Système (pour les jours de pause)
+const systemConfigSchema = new mongoose.Schema({
+  key: { type: String, unique: true, required: true },
+  value: mongoose.Schema.Types.Mixed
+});
+
+const SystemConfig = mongoose.model('SystemConfig', systemConfigSchema);
 
 // Schéma Retrait
 const withdrawalSchema = new mongoose.Schema({
@@ -1224,6 +1245,229 @@ app.delete('/api/admin/tasks/:taskId', async (req, res) => {
     const result = await Task.findByIdAndDelete(req.params.taskId);
     if (!result) return res.status(404).json({ error: 'Tâche non trouvée' });
     res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// API: FORMATIONS
+// ============================================
+app.get('/api/formations', async (req, res) => {
+  try {
+    const formations = await Formation.find({ isActive: true }).sort({ createdAt: -1 });
+    res.json(formations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/formations', async (req, res) => {
+  try {
+    const formations = await Formation.find().sort({ createdAt: -1 });
+    res.json(formations);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/formations', async (req, res) => {
+  try {
+    const { title, description, link, image, category } = req.body;
+    
+    if (!title || !description || !link) {
+      return res.status(400).json({ error: 'Titre, description et lien sont obligatoires' });
+    }
+    
+    const formation = await Formation.create({
+      title,
+      description,
+      link,
+      image: image || '',
+      category: category || 'Général'
+    });
+    
+    res.json({ success: true, formation });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/admin/formations/:formationId', async (req, res) => {
+  try {
+    const { title, description, link, image, category, isActive } = req.body;
+    const formation = await Formation.findByIdAndUpdate(
+      req.params.formationId,
+      { title, description, link, image, category, isActive },
+      { new: true }
+    );
+    if (!formation) return res.status(404).json({ error: 'Formation non trouvée' });
+    res.json({ success: true, formation });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/admin/formations/:formationId', async (req, res) => {
+  try {
+    const result = await Formation.findByIdAndDelete(req.params.formationId);
+    if (!result) return res.status(404).json({ error: 'Formation non trouvée' });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// API: SYSTÈME DE PAUSE DES TÂCHES
+// ============================================
+app.get('/api/tasks/status', async (req, res) => {
+  try {
+    // Récupérer la config du cycle de pause
+    let cycleConfig = await SystemConfig.findOne({ key: 'taskCycle' });
+    
+    if (!cycleConfig) {
+      // Initialiser le cycle : 2 jours actifs, 3 jours de pause
+      cycleConfig = await SystemConfig.create({
+        key: 'taskCycle',
+        value: {
+          startDate: new Date().toISOString(),
+          activeDays: 2,
+          pauseDays: 3,
+          currentDay: 1
+        }
+      });
+    }
+    
+    const config = cycleConfig.value;
+    const startDate = new Date(config.startDate);
+    const today = new Date();
+    const diffTime = Math.abs(today - startDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const cycleLength = config.activeDays + config.pauseDays;
+    const dayInCycle = diffDays % cycleLength;
+    
+    const isActive = dayInCycle < config.activeDays;
+    const remainingDays = isActive 
+      ? config.activeDays - dayInCycle 
+      : cycleLength - dayInCycle;
+    
+    res.json({
+      isActive,
+      dayInCycle: dayInCycle + 1,
+      remainingDays,
+      activeDays: config.activeDays,
+      pauseDays: config.pauseDays,
+      message: isActive 
+        ? `Tâches disponibles (${remainingDays} jour(s) restant(s))` 
+        : `Pause en cours (reprise dans ${remainingDays} jour(s))`
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/tasks/cycle', async (req, res) => {
+  try {
+    const { activeDays, pauseDays } = req.body;
+    
+    await SystemConfig.findOneAndUpdate(
+      { key: 'taskCycle' },
+      { 
+        value: {
+          startDate: new Date().toISOString(),
+          activeDays: activeDays || 2,
+          pauseDays: pauseDays || 3,
+          currentDay: 1
+        }
+      },
+      { upsert: true }
+    );
+    
+    res.json({ success: true, message: 'Cycle mis à jour' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Réinitialiser les tâches quotidiennes d'un utilisateur
+app.post('/api/tasks/reset/:userId', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    
+    const today = new Date().toDateString();
+    
+    // Si c'est un nouveau jour, réinitialiser les tâches du jour
+    if (user.lastTaskDate !== today) {
+      user.tasksCompletedToday = [];
+      user.lastTaskDate = today;
+      await user.save();
+    }
+    
+    res.json({ success: true, tasksCompletedToday: user.tasksCompletedToday });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API: Obtenir des tâches aléatoires pour aujourd'hui
+app.get('/api/tasks/daily/:userId', async (req, res) => {
+  try {
+    // Vérifier si les tâches sont en pause
+    let cycleConfig = await SystemConfig.findOne({ key: 'taskCycle' });
+    
+    if (cycleConfig) {
+      const config = cycleConfig.value;
+      const startDate = new Date(config.startDate);
+      const today = new Date();
+      const diffTime = Math.abs(today - startDate);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const cycleLength = config.activeDays + config.pauseDays;
+      const dayInCycle = diffDays % cycleLength;
+      
+      if (dayInCycle >= config.activeDays) {
+        const remainingDays = cycleLength - dayInCycle;
+        return res.json({ 
+          paused: true, 
+          message: `Les tâches sont en pause. Reprise dans ${remainingDays} jour(s).`,
+          tasks: [] 
+        });
+      }
+    }
+    
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    
+    const today = new Date().toDateString();
+    
+    // Réinitialiser si nouveau jour
+    if (user.lastTaskDate !== today) {
+      user.tasksCompletedToday = [];
+      user.lastTaskDate = today;
+      await user.save();
+    }
+    
+    // Récupérer toutes les tâches actives
+    const allTasks = await Task.find({ isActive: true });
+    
+    // Filtrer les tâches non complétées aujourd'hui
+    const availableTasks = allTasks.filter(t => 
+      !user.tasksCompletedToday.includes(t._id.toString())
+    );
+    
+    // Mélanger aléatoirement les tâches
+    const shuffledTasks = availableTasks.sort(() => Math.random() - 0.5);
+    
+    // Limiter à 10 tâches max par jour
+    const dailyTasks = shuffledTasks.slice(0, 10 - user.tasksCompletedToday.length);
+    
+    res.json({ 
+      paused: false,
+      tasks: dailyTasks,
+      completedToday: user.tasksCompletedToday.length,
+      maxDaily: 10
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
