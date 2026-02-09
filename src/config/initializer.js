@@ -1,5 +1,6 @@
 /**
  * Initialisation des données par défaut
+ * Gère la migration SHA256 → bcrypt
  */
 
 const bcrypt = require('bcryptjs');
@@ -198,7 +199,7 @@ const defaultVideos = [
 
 async function initializeData() {
   try {
-    // Créer admin si n'existe pas
+    // Gérer l'admin - créer OU mettre à jour le mot de passe (migration SHA256 → bcrypt)
     const adminExists = await User.findOne({ email: 'admin@motosu.com' });
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash('admin123', 10);
@@ -212,6 +213,28 @@ async function initializeData() {
         referralCode: 'ADMIN001'
       });
       console.log('✅ Admin créé: admin@motosu.com / admin123');
+    } else {
+      // Vérifier si le mot de passe est en bcrypt (commence par $2a$ ou $2b$)
+      const isBcrypt = adminExists.password && adminExists.password.startsWith('$2');
+      if (!isBcrypt) {
+        // Migration : ancien hash SHA256 → nouveau hash bcrypt
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+        adminExists.password = hashedPassword;
+        adminExists.status = 'validated';
+        adminExists.isAdmin = true;
+        await adminExists.save();
+        console.log('✅ Admin migré vers bcrypt: admin@motosu.com / admin123');
+      }
+    }
+
+    // Migrer TOUS les utilisateurs avec hash SHA256 vers bcrypt
+    const allUsers = await User.find({});
+    for (const user of allUsers) {
+      if (user.password && !user.password.startsWith('$2')) {
+        // C'est un hash SHA256, on ne peut pas le convertir
+        // L'utilisateur devra se réinscrire ou demander un reset
+        console.log(`⚠️ Utilisateur ${user.email} a un ancien hash, reset nécessaire`);
+      }
     }
 
     // Créer config par défaut
