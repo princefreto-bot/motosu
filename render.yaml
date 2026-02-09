@@ -1,9 +1,15 @@
 services:
   - type: web
-    name: motosu-agencies
+    name: motosu
     env: node
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGO_URI
+        sync: false
+    healthCheckPath: /api/health
