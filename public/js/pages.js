@@ -10,7 +10,7 @@ const pages = {
     <div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-500 to-purple-600">
       <div class="card w-full max-w-md">
         <div class="text-center mb-6">
-          <h1 class="text-3xl font-bold text-blue-600">🚀 Motosu Agencies</h1>
+          <div class="flex justify-center mb-4">${renderLogo('lg')}</div>
           <p class="slogan text-lg mt-2">"Partagez, Gagnez, Grandissez ensemble"</p>
           <p class="text-gray-500 mt-1">Plateforme de gains en ligne</p>
         </div>
@@ -34,6 +34,7 @@ const pages = {
             <a href="#" onclick="navigate('security')" class="hover:text-blue-500">Sécurité</a><span>•</span>
             <a href="#" onclick="navigate('contact')" class="hover:text-blue-500">Contact</a>
           </div>
+          <div class="flex justify-center mt-3 opacity-50">${renderLogo()}</div>
           <p class="text-center text-xs text-gray-300 mt-3">© 2024 Motosu Agencies. Tous droits réservés.</p>
         </div>
       </div>
@@ -43,6 +44,7 @@ const pages = {
   register: () => `
     <div class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-green-500 to-blue-600">
       <div class="card w-full max-w-md">
+        <div class="flex justify-center mb-4">${renderLogo('lg')}</div>
         <h1 class="text-2xl font-bold text-center mb-2 text-blue-600">Créer un compte</h1>
         <p class="text-center text-sm text-gray-500 mb-6 slogan">"Partagez, Gagnez, Grandissez ensemble"</p>
         <form id="registerForm">
@@ -65,6 +67,7 @@ const pages = {
     <div class="min-h-screen p-4 bg-gray-100">
       <div class="card max-w-2xl mx-auto">
         <button onclick="navigate('login')" class="text-gray-500 mb-4">← Retour</button>
+        <div class="flex justify-center mb-4">${renderLogo('lg')}</div>
         <h1 class="text-2xl font-bold mb-2 text-center text-blue-600">💳 Abonnement Motosu</h1>
         <p class="text-center slogan mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
         <div class="stat-orange rounded-xl p-6 text-center mb-6">
@@ -98,6 +101,7 @@ const pages = {
     <div class="min-h-screen p-4 bg-gray-100">
       <div class="card max-w-2xl mx-auto">
         <button onclick="navigate('login')" class="text-gray-500 mb-4">← Retour</button>
+        <div class="flex justify-center mb-4">${renderLogo('lg')}</div>
         <h1 class="text-2xl font-bold mb-2 text-blue-600">À propos de Motosu Agencies</h1>
         <p class="slogan mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
         <p class="text-gray-700 leading-relaxed mb-4">Motosu Agencies est une plateforme innovante dédiée à l'accompagnement des jeunes entrepreneurs et professionnels francophones en Afrique. Notre mission est de créer un environnement sécurisé et accessible où chacun peut développer son réseau, apprendre à travers des contenus interactifs et bénéficier d'opportunités de croissance progressive.</p>
@@ -222,7 +226,7 @@ const pages = {
     <div class="min-h-screen p-4 bg-gray-100">
       <div class="card max-w-lg mx-auto">
         <div class="text-center mb-6">
-          <div class="text-6xl mb-4">⏳</div>
+          <div class="flex justify-center mb-4">${renderLogo('lg')}</div>
           <h1 class="text-xl font-bold text-orange-600">Compte de recharge - Compte inactif</h1>
           <p class="text-gray-600 mt-2">Veuillez vous abonner. Utilisez le numéro <strong>${state.currentUser?.phone || ''}</strong> pour le dépôt.</p>
         </div>
@@ -251,12 +255,16 @@ const pages = {
     </div>
   `,
 
-  dashboard: () => `
+  dashboard: () => {
+    if(state.currentUser?.earnings) checkMilestone(state.currentUser.earnings);
+    return `
     <div class="min-h-screen bg-gray-100">
       ${renderNav()}
       <div class="p-4 max-w-4xl mx-auto">
-        <h1 class="text-xl font-bold mb-1">Bonjour, ${state.currentUser?.name?.split(' ')[0]} 👋</h1>
-        <p class="text-sm slogan mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
+        <div class="flex items-center gap-3 mb-1">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">${(state.currentUser?.name || 'U')[0].toUpperCase()}</div>
+          <div><h1 class="text-xl font-bold">Bonjour, ${state.currentUser?.name?.split(' ')[0]} 👋</h1><p class="text-xs slogan">"Partagez, Gagnez, Grandissez ensemble"</p></div>
+        </div>
         <div class="grid grid-cols-2 gap-4 mb-6">
           <div class="stat-blue rounded-xl p-4 text-center"><p class="text-sm opacity-80">Solde Mis</p><p class="text-2xl font-bold">4 000 FCFA</p></div>
           <div class="stat-orange rounded-xl p-4 text-center"><p class="text-sm opacity-80">Gains Accumulés</p><p class="text-2xl font-bold">${state.currentUser?.earnings || 0} FCFA</p></div>
@@ -292,7 +300,7 @@ const pages = {
         </div>
       </div>
     </div>
-  `,
+  `},
 
   tasks: () => {
     const completedToday = state.currentUser?.tasksCompletedToday?.length || 0;

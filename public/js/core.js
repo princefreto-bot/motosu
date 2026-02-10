@@ -60,12 +60,76 @@ const toast = (msg, type = 'info') => {
   setTimeout(() => div.remove(), 4000);
 };
 
+// Rendu du logo
+function renderLogo(size = 'sm') {
+  const isLg = size === 'lg';
+  return `
+    <div class="logo-container ${isLg ? 'logo-lg' : ''}">
+      <div class="logo-icon">${isLg ? 'M' : 'M'}</div>
+      <div><span class="logo-text">MOTOSU</span><span class="logo-sub">agencies</span></div>
+    </div>`;
+}
+
+// Système de félicitations
+const MILESTONES = [1000, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000];
+
+function checkMilestone(earnings) {
+  const shown = JSON.parse(localStorage.getItem('milestonesShown') || '[]');
+  for (const milestone of MILESTONES) {
+    if (earnings >= milestone && !shown.includes(milestone)) {
+      shown.push(milestone);
+      localStorage.setItem('milestonesShown', JSON.stringify(shown));
+      showCongrats(milestone);
+      return;
+    }
+  }
+}
+
+function showCongrats(amount) {
+  const name = state.currentUser?.name?.split(' ')[0] || 'Champion';
+  const messages = [
+    'Votre engagement porte ses fruits ! Continuez sur cette lancée ! 💪',
+    'Vous êtes sur la bonne voie ! Chaque action compte ! 🌟',
+    'Incroyable progression ! Le succès est au bout du chemin ! 🏆',
+    'Bravo pour votre persévérance ! Partagez et grandissez ! 🚀',
+    'Vous faites partie des meilleurs ! Continuez à inspirer ! ⭐'
+  ];
+  const msg = messages[Math.floor(Math.random() * messages.length)];
+  const colors = ['#3b82f6','#f97316','#10b981','#8b5cf6','#ec4899','#eab308'];
+  
+  let confettiHTML = '';
+  for (let i = 0; i < 30; i++) {
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const left = Math.random() * 100;
+    const delay = Math.random() * 3;
+    const size = 6 + Math.random() * 8;
+    confettiHTML += `<div class="confetti" style="left:${left}%;background:${color};width:${size}px;height:${size}px;animation-delay:${delay}s;"></div>`;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'congrats-overlay';
+  overlay.innerHTML = `
+    ${confettiHTML}
+    <div class="congrats-modal">
+      <div class="congrats-content">
+        <div class="congrats-emoji">🎉</div>
+        <div class="congrats-title">Félicitations !</div>
+        <div class="congrats-name">${name}</div>
+        <div class="congrats-amount">${amount.toLocaleString('fr-FR')} FCFA</div>
+        <p class="congrats-msg">${msg}</p>
+        <button class="congrats-btn" onclick="this.closest('.congrats-overlay').remove()">Continuer 🚀</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => { if(overlay.parentNode) overlay.remove(); }, 15000);
+}
+
 // Barre de navigation
 function renderNav() {
   return `
     <div class="bg-white shadow-sm sticky top-0 z-50">
       <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-        <h1 class="text-lg font-bold text-blue-600">🚀 Motosu</h1>
+        ${renderLogo()}
         <div class="flex items-center gap-3">
           <span class="text-sm font-bold text-orange-600">${state.currentUser?.earnings || 0} FCFA</span>
           <button onclick="logout()" class="text-red-500 text-sm">Quitter</button>
