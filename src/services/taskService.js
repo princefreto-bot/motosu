@@ -146,6 +146,7 @@ const completeTask = async (userId, taskId, answers) => {
 
     // Créditer les gains
     user.earnings += task.reward;
+    user.totalEarnings = (user.totalEarnings || 0) + task.reward;
     user.completedTasks.push(taskId);
     user.tasksCompletedToday.push(taskId);
     await user.save();

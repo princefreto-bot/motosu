@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
   },
   isAdmin: { type: Boolean, default: false },
   balance: { type: Number, default: 0 },
-  earnings: { type: Number, default: 0 },
+  earnings: { type: Number, default: 0 },       // Solde actuel (peut baisser)
+  totalEarnings: { type: Number, default: 0 },  // Gains cumulés à vie (ne baisse jamais)
   referralCode: { type: String, unique: true },
   referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   completedTasks: [{ type: String }],

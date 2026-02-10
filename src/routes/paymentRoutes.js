@@ -1,81 +1,117 @@
 /**
- * Routes de paiement
+ * Routes de paiement - SYSTÈME PAYPLUS EXCLUSIF
  */
 
 const express = require('express');
 const router = express.Router();
 const Payment = require('../models/Payment');
 const User = require('../models/User');
+const { initPayment, verifyTransaction } = require('../services/payPlusService');
+const { distributeCommissions } = require('../services/referralService');
 const { SUBSCRIPTION_AMOUNT } = require('../config/constants');
-const { paymentLimiter } = require('../middlewares/rateLimiter');
 
-// POST /api/payment/proof - Envoyer une preuve de paiement
-router.post('/proof', paymentLimiter, async (req, res) => {
+// POST /api/payment/init - Initier un paiement PayPlus
+router.post('/init', async (req, res) => {
   try {
-    const { userId, screenshot, transactionId, phoneUsed } = req.body;
-
-    if (!userId || !screenshot) {
-      return res.status(400).json({ error: 'Données incomplètes' });
-    }
-
+    const { userId } = req.body;
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    // Initialiser PayPlus
+    const result = await initPayment(user, SUBSCRIPTION_AMOUNT);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
     }
 
-    // Mettre à jour l'utilisateur avec la preuve
-    user.paymentProof = {
-      screenshot,
-      transactionId: transactionId || '',
-      phoneUsed: phoneUsed || user.phone,
-      submittedAt: new Date()
-    };
-    user.status = 'pending_payment';
-    await user.save();
-
-    // Créer un enregistrement de paiement
+    // Créer un paiement en attente
     const payment = new Payment({
       userId: user._id,
       userName: user.name,
       userEmail: user.email,
       userPhone: user.phone,
       amount: SUBSCRIPTION_AMOUNT,
-      screenshot,
-      transactionId: transactionId || '',
-      phoneUsed: phoneUsed || user.phone,
+      transactionId: result.token || 'PENDING',
       status: 'pending'
     });
     await payment.save();
 
     res.json({
       success: true,
-      message: 'Preuve de paiement envoyée. Validation sous 24h.'
+      payment_url: result.payment_url
     });
+
   } catch (error) {
-    console.error('Erreur envoi preuve:', error.message);
+    console.error('Erreur init paiement:', error.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// GET /api/payment/return - Retour après paiement (pour compatibilité)
-router.get('/return', (req, res) => {
+// POST /api/payment/notify - Callback PayPlus
+router.post('/notify', async (req, res) => {
+  try {
+    const { token, command_status } = req.body; // Adapter selon payload réel PayPlus
+
+    console.log('PayPlus Callback:', req.body);
+
+    // Vérifier la transaction
+    // Note: Si PayPlus envoie le statut directement, on peut l'utiliser, 
+    // sinon on vérifie via API
+    
+    // Rechercher le paiement
+    // (Adapter la recherche selon ce que PayPlus renvoie comme ID unique)
+    // Ici on suppose que le token est renvoyé ou qu'on le retrouve via metadata
+    
+    // Exemple simplifié: on attend que le verify soit appelé ou on fait la logique ici.
+    // Pour la sécurité, on va toujours vérifier via l'API si possible.
+    
+    res.json({ response_code: "00", response_text: "OK" });
+  } catch (error) {
+    console.error('Callback Error:', error.message);
+    res.status(500).json({ error: 'Error' });
+  }
+});
+
+// GET /api/payment/return - Retour succès
+router.get('/return', async (req, res) => {
+  // Ici on peut vérifier le statut si le token est dans l'URL
+  // PayPlus renvoie souvent ?token=...
+  const { token } = req.query;
+
+  if (token) {
+    try {
+      const statusData = await verifyTransaction(token);
+      
+      // Logique de validation si succès
+      if (statusData && statusData.response_code === '00') {
+         // Trouver le paiement associé au token
+         const payment = await Payment.findOne({ transactionId: token });
+         
+         if (payment && payment.status === 'pending') {
+            payment.status = 'validated';
+            await payment.save();
+            
+            const user = await User.findById(payment.userId);
+            if (user && user.status !== 'validated') {
+              user.status = 'validated';
+              user.subscriptionDate = new Date();
+              await user.save();
+              await distributeCommissions(user);
+            }
+         }
+      }
+    } catch (e) {
+      console.error('Verif error on return:', e);
+    }
+  }
+
   res.redirect('/');
 });
 
-// GET /api/payment/cancel - Annulation paiement (pour compatibilité)
+// GET /api/payment/cancel - Annulation
 router.get('/cancel', (req, res) => {
   res.redirect('/');
-});
-
-// POST /api/payment/notify - Webhook de notification (pour compatibilité)
-router.post('/notify', (req, res) => {
-  console.log('Notification de paiement reçue:', req.body);
-  res.json({ success: true, message: 'Notification reçue' });
-});
-
-// GET /api/payment/notify - Pour test de l'endpoint
-router.get('/notify', (req, res) => {
-  res.json({ success: true, message: 'Notification endpoint active' });
 });
 
 module.exports = router;

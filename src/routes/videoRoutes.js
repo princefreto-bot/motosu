@@ -46,6 +46,7 @@ router.post('/:videoId/watch', async (req, res) => {
 
     // Créditer les gains
     user.earnings += video.reward;
+    user.totalEarnings = (user.totalEarnings || 0) + video.reward;
     user.watchedVideos.push(videoId);
     await user.save();
 

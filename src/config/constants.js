@@ -1,6 +1,6 @@
 /**
  * Constantes de l'application
- * Montants, limites, configurations
+ * NOUVEAU SYSTÈME PAYPLUS
  */
 
 module.exports = {
@@ -13,8 +13,8 @@ module.exports = {
   },
   
   WITHDRAWAL: {
-    MINIMUM: 15000,
-    METHODS: ['moov', 'mix']
+    MINIMUM: 8000, // Nouveau minimum fixe
+    METHODS: ['mobile_money'] // Uniquement via PayPlus
   },
   
   TASKS: {
@@ -41,12 +41,6 @@ module.exports = {
     EXPIRES_IN: '30d'
   },
   
-  DEFAULT_PAYMENT_NUMBERS: [
-    { operator: 'Moov Money', number: '+225 01 01 01 01 01', name: 'MOTOSU AGENCIES' },
-    { operator: 'Orange Money', number: '+225 07 07 07 07 07', name: 'MOTOSU AGENCIES' },
-    { operator: 'MTN Money', number: '+225 05 05 05 05 05', name: 'MOTOSU AGENCIES' },
-    { operator: 'Wave', number: '+225 01 02 03 04 05', name: 'MOTOSU AGENCIES' }
-  ],
-  
+  // Configuration UI (Plus de numéros manuels)
   SLOGAN: "Partagez, Gagnez, Grandissez ensemble"
 };
