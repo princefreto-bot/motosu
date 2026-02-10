@@ -5,7 +5,8 @@ const withdrawalSchema = new mongoose.Schema({
   userName: String,
   userPhone: String,
   amount: { type: Number, required: true },
-  method: { type: String, enum: ['moov', 'mix'], required: true },
+  // PayPlus uniquement (mobile_money). On garde moov/mix en enum pour compatibilité historique.
+  method: { type: String, enum: ['mobile_money', 'moov', 'mix'], required: true },
   accountNumber: { type: String, required: true },
   accountName: String,
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
