@@ -1,6 +1,7 @@
 /**
  * MOTOSU AGENCIES - Pages Module
  * Tous les templates de pages
+ * 100% PayDunya - Minimum retrait 8000 FCFA
  */
 
 const pages = {
@@ -72,7 +73,7 @@ const pages = {
         <p class="text-center slogan mb-4">"Partagez, Gagnez, Grandissez ensemble"</p>
         <div class="stat-orange rounded-xl p-6 text-center mb-6">
           <p class="text-lg opacity-90">Frais d'abonnement unique</p>
-          <p class="text-4xl font-bold">${state.config.subscriptionAmount || 4000} FCFA</p>
+          <p class="text-4xl font-bold">4 000 FCFA</p>
         </div>
         <div class="mb-6">
           <h2 class="font-bold text-lg mb-3">✅ Ce que vous obtenez :</h2>
@@ -80,16 +81,16 @@ const pages = {
             <li class="flex items-start gap-3 p-3 bg-green-50 rounded-lg"><span class="text-green-500 text-xl">✓</span><div><p class="font-semibold">Accès aux micro-tâches rémunérées</p><p class="text-sm text-gray-500">Sondages, vérifications, classifications...</p></div></li>
             <li class="flex items-start gap-3 p-3 bg-purple-50 rounded-lg"><span class="text-purple-500 text-xl">✓</span><div><p class="font-semibold">Vidéos à regarder = Argent gagné</p><p class="text-sm text-gray-500">YouTube et TikTok rémunérés</p></div></li>
             <li class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg"><span class="text-blue-500 text-xl">✓</span><div><p class="font-semibold">Programme de parrainage 3 niveaux</p><p class="text-sm text-gray-500">2 000 FCFA (N1) + 800 FCFA (N2) + 400 FCFA (N3) par filleul</p></div></li>
-            <li class="flex items-start gap-3 p-3 bg-orange-50 rounded-lg"><span class="text-orange-500 text-xl">✓</span><div><p class="font-semibold">Retraits faciles</p><p class="text-sm text-gray-500">Mobile Money via PayDunya dès 8 000 FCFA</p></div></li>
+            <li class="flex items-start gap-3 p-3 bg-orange-50 rounded-lg"><span class="text-orange-500 text-xl">✓</span><div><p class="font-semibold">Retraits faciles via PayDunya</p><p class="text-sm text-gray-500">Mobile Money dès 8 000 FCFA</p></div></li>
           </ul>
         </div>
         <div class="bg-blue-50 p-4 rounded-lg mb-6">
           <h3 class="font-bold text-blue-600 mb-2">💡 Comment s'abonner ?</h3>
           <ol class="text-sm text-gray-700 space-y-2">
             <li>1. Inscrivez-vous gratuitement</li>
-            <li>2. Effectuez le dépôt de ${state.config.subscriptionAmount || 4000} FCFA via Mobile Money</li>
-            <li>3. Envoyez la capture d'écran du paiement</li>
-            <li>4. Votre compte est activé sous 24h</li>
+            <li>2. Cliquez sur "Payer via PayDunya"</li>
+            <li>3. Payez 4 000 FCFA via Mobile Money</li>
+            <li>4. Votre compte est activé automatiquement!</li>
           </ol>
         </div>
         <button onclick="navigate('register')" class="btn-primary w-full mb-3">Créer un compte maintenant</button>
@@ -172,7 +173,7 @@ const pages = {
           <div><h3 class="font-bold text-gray-800 mb-2">Frais d'activation</h3><p>Non remboursables une fois le compte activé.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">Cas de remboursement</h3><ul class="list-disc pl-5 mt-2 space-y-1"><li>Double paiement involontaire</li><li>Compte non activé après 7 jours malgré paiement</li><li>Erreur technique empêchant l'utilisation</li></ul></div>
           <div><h3 class="font-bold text-gray-800 mb-2">Procédure</h3><p>Contactez le support avec : nom, email, preuve de paiement, motif. Traitement 5-10 jours ouvrés.</p></div>
-          <div><h3 class="font-bold text-gray-800 mb-2">Retraits</h3><p>Gains retirables à partir de 15 000 FCFA via Moov Money ou Mix by Yas. Traitement 24-48h ouvrées.</p></div>
+          <div><h3 class="font-bold text-gray-800 mb-2">Retraits</h3><p>Gains retirables à partir de 8 000 FCFA via PayDunya Mobile Money. Traitement 24-48h ouvrées.</p></div>
         </div>
       </div>
     </div>
@@ -188,7 +189,7 @@ const pages = {
           <div><h3 class="font-bold text-gray-800 mb-2">Chiffrement</h3><p>Mots de passe chiffrés avec <strong>bcrypt</strong>.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">Authentification</h3><p>Tokens <strong>JWT</strong> avec expiration 30 jours.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">Protections</h3><ul class="list-disc pl-5 space-y-1"><li><strong>Rate Limiting</strong> : Anti-spam et brute force</li><li><strong>Helmet</strong> : Headers HTTP sécurisés</li><li><strong>CORS</strong> : Requêtes autorisées uniquement</li><li><strong>Validation</strong> : Entrées validées et nettoyées</li></ul></div>
-          <div><h3 class="font-bold text-gray-800 mb-2">Paiements</h3><p>Via <strong>Mobile Money</strong> (Moov, Mix by Yas). Chaque transaction vérifiée manuellement.</p></div>
+          <div><h3 class="font-bold text-gray-800 mb-2">Paiements</h3><p>Via <strong>PayDunya</strong> — Plateforme sécurisée de paiement Mobile Money. Transactions chiffrées et vérifiées.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">Hébergement</h3><p><strong>Render</strong> (HTTPS) + <strong>MongoDB Atlas</strong> (chiffrement).</p></div>
         </div>
       </div>
@@ -211,8 +212,8 @@ const pages = {
           <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
             <h3 class="font-bold text-orange-700 mb-2">⚡ FAQ</h3>
             <div class="space-y-3 text-sm">
-              <div><p class="font-semibold">Comment activer mon compte ?</p><p class="text-gray-600">Dépôt de 4 000 FCFA, envoi de capture, activation sous 24h.</p></div>
-              <div><p class="font-semibold">Quand retirer mes gains ?</p><p class="text-gray-600">Dès 15 000 FCFA via Moov Money ou Mix by Yas.</p></div>
+              <div><p class="font-semibold">Comment activer mon compte ?</p><p class="text-gray-600">Cliquez sur "Payer via PayDunya" et payez 4 000 FCFA. Activation automatique!</p></div>
+              <div><p class="font-semibold">Quand retirer mes gains ?</p><p class="text-gray-600">Dès 8 000 FCFA via PayDunya Mobile Money.</p></div>
               <div><p class="font-semibold">Combien avec le parrainage ?</p><p class="text-gray-600">2 000 FCFA (N1), 800 FCFA (N2), 400 FCFA (N3).</p></div>
             </div>
           </div>
@@ -227,40 +228,95 @@ const pages = {
       <div class="card max-w-lg mx-auto">
         <div class="text-center mb-6">
           <div class="flex justify-center mb-4">${renderLogo('lg')}</div>
-          <h1 class="text-xl font-bold text-orange-600">Compte de recharge - Compte inactif</h1>
-          <p class="text-gray-600 mt-2">Veuillez vous abonner pour activer votre compte.</p>
-        </div>
-        <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4">
-          <p class="font-bold text-orange-800 text-center text-lg">${state.config.subscriptionAmount || 4000} FCFA</p>
-          <p class="text-xs text-orange-700 text-center mt-1">Paiement sécurisé via PayDunya</p>
+          <h1 class="text-xl font-bold text-orange-600">⚠️ Compte inactif</h1>
+          <p class="text-gray-600 mt-2">Activez votre compte pour accéder à toutes les fonctionnalités.</p>
         </div>
 
-        <button onclick="payWithPayDunya()" class="btn-orange w-full mb-3">🔒 Payer et activer mon compte</button>
-
-        <div class="bg-blue-50 p-4 rounded-lg mb-6">
-          <h3 class="font-bold text-blue-600 mb-2">ℹ️ Info</h3>
-          <p class="text-sm text-gray-700">Après paiement, votre compte sera activé automatiquement.</p>
+        <!-- Montant à payer -->
+        <div class="bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl p-6 text-center mb-6">
+          <p class="text-sm opacity-90 mb-1">Frais d'activation unique</p>
+          <p class="text-4xl font-bold">4 000 FCFA</p>
+          <p class="text-xs opacity-75 mt-2">Paiement sécurisé via PayDunya</p>
         </div>
 
-        <button onclick="logout()" class="w-full text-red-500 py-2">Déconnexion</button>
+        <!-- Bouton PayDunya -->
+        <button onclick="payWithPayDunya()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl text-lg transition-all shadow-lg hover:shadow-xl mb-4">
+          🔒 Payer et Activer mon Compte
+        </button>
+
+        <!-- Infos -->
+        <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
+          <h3 class="font-bold text-blue-700 mb-2">✅ Après paiement :</h3>
+          <ul class="text-sm text-gray-700 space-y-1">
+            <li>• Compte activé automatiquement</li>
+            <li>• Accès aux micro-tâches rémunérées</li>
+            <li>• Programme de parrainage actif</li>
+            <li>• Retraits possibles dès 8 000 FCFA</li>
+          </ul>
+        </div>
+
+        <!-- Méthodes acceptées -->
+        <div class="text-center mb-4">
+          <p class="text-xs text-gray-500 mb-2">Moyens de paiement acceptés :</p>
+          <div class="flex justify-center gap-3 flex-wrap">
+            <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">Orange Money</span>
+            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">MTN MoMo</span>
+            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">Wave</span>
+            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Moov Money</span>
+          </div>
+        </div>
+
+        <button onclick="logout()" class="w-full text-red-500 py-2 text-sm">Déconnexion</button>
       </div>
     </div>
   `,
 
   dashboard: () => {
     if(state.currentUser?.earnings) checkMilestone(state.currentUser.earnings);
+    const totalPaid = state.globalStats?.totalPaid || 0;
+    const totalEarnings = state.globalStats?.totalEarnings || 0;
     return `
     <div class="min-h-screen bg-gray-100">
       ${renderNav()}
       <div class="p-4 max-w-4xl mx-auto">
-        <div class="flex items-center gap-3 mb-1">
-          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">${(state.currentUser?.name || 'U')[0].toUpperCase()}</div>
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl">${(state.currentUser?.name || 'U')[0].toUpperCase()}</div>
           <div><h1 class="text-xl font-bold">Bonjour, ${state.currentUser?.name?.split(' ')[0]} 👋</h1><p class="text-xs slogan">"Partagez, Gagnez, Grandissez ensemble"</p></div>
         </div>
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="stat-blue rounded-xl p-4 text-center"><p class="text-sm opacity-80">Solde Mis</p><p class="text-2xl font-bold">4 000 FCFA</p></div>
-          <div class="stat-orange rounded-xl p-4 text-center"><p class="text-sm opacity-80">Gains Accumulés</p><p class="text-2xl font-bold">${state.currentUser?.earnings || 0} FCFA</p></div>
+
+        <!-- Solde & Gains -->
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="stat-blue rounded-xl p-4 text-center"><p class="text-sm opacity-80">Solde Initial</p><p class="text-2xl font-bold">4 000 FCFA</p></div>
+          <div class="stat-orange rounded-xl p-4 text-center"><p class="text-sm opacity-80">Gains Disponibles</p><p class="text-2xl font-bold">${state.currentUser?.earnings || 0} FCFA</p></div>
         </div>
+
+        <!-- Total Gains Cumulés (ne diminue jamais) -->
+        <div class="bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl p-4 mb-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-sm opacity-90">📈 Total Gains Cumulés</p>
+              <p class="text-xs opacity-75">Ne diminue jamais</p>
+            </div>
+            <p class="text-2xl font-bold">${state.currentUser?.totalEarnings || state.currentUser?.earnings || 0} FCFA</p>
+          </div>
+        </div>
+
+        <!-- Stats Globales Plateforme -->
+        <div class="bg-white rounded-xl p-4 mb-4 border-2 border-gray-200">
+          <h3 class="font-bold text-gray-700 mb-3 text-center">🌍 Statistiques Motosu</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-green-50 p-3 rounded-lg text-center">
+              <p class="text-xs text-gray-500">💰 Total Payé aux Utilisateurs</p>
+              <p class="text-lg font-bold text-green-600">${totalPaid.toLocaleString()} FCFA</p>
+            </div>
+            <div class="bg-blue-50 p-3 rounded-lg text-center">
+              <p class="text-xs text-gray-500">📊 Total Gains Générés</p>
+              <p class="text-lg font-bold text-blue-600">${totalEarnings.toLocaleString()} FCFA</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistiques personnelles -->
         <div class="card mb-4">
           <h2 class="font-bold mb-3">📊 Vos statistiques</h2>
           <div class="grid grid-cols-4 gap-2 text-center">
@@ -270,6 +326,8 @@ const pages = {
             <div class="bg-orange-50 p-3 rounded-lg"><p class="text-xl font-bold text-orange-600">${state.currentUser?.watchedVideos?.length || 0}</p><p class="text-xs text-gray-500">Vidéos</p></div>
           </div>
         </div>
+
+        <!-- Invitation -->
         <div class="card mb-4 bg-gradient-to-r from-orange-100 to-yellow-100 border-2 border-orange-300">
           <h2 class="font-bold mb-2 text-orange-700">🔥 Invitez vos amis!</h2>
           <p class="text-sm text-gray-700 mb-3">Plus vous partagez, plus vous gagnez!</p>
@@ -281,6 +339,8 @@ const pages = {
             </div>
           </div>
         </div>
+
+        <!-- Actions rapides -->
         <div class="card">
           <h2 class="font-bold mb-3">💡 Actions rapides</h2>
           <div class="grid grid-cols-4 gap-3">
@@ -478,45 +538,103 @@ const pages = {
     </div>
   `,
 
-  withdraw: () => `
+  withdraw: () => {
+    const userEarnings = state.currentUser?.earnings || 0;
+    const canWithdraw = userEarnings >= 8000;
+    const totalWithdrawn = state.withdrawals?.reduce((sum, w) => w.status === 'approved' ? sum + w.amount : sum, 0) || 0;
+    
+    return `
     <div class="min-h-screen bg-gray-100">
       ${renderNav()}
       <div class="p-4 max-w-4xl mx-auto">
-        <h1 class="text-xl font-bold mb-4">💰 Retraits</h1>
-        <div class="card mb-4">
-          <div class="stat-orange rounded-lg p-4 text-center mb-4"><p class="text-sm opacity-80">Solde disponible</p><p class="text-3xl font-bold">${state.currentUser?.earnings || 0} FCFA</p></div>
-          <form id="withdrawForm">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Méthode</label>
-            <select id="withdrawMethod" class="input">
-              <option value="moov">Moov Money (min 15 000 FCFA)</option>
-              <option value="mix">Mix by Yas (min 15 000 FCFA)</option>
-            </select>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Montant</label>
-            <input type="number" id="withdrawAmount" class="input" placeholder="Montant (min 15 000)" min="15000" required>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Numéro de réception</label>
-            <input type="text" id="withdrawAccount" class="input" placeholder="+225 XX XX XX XX XX" required>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Nom du titulaire</label>
-            <input type="text" id="withdrawName" class="input" placeholder="Nom complet" value="${state.currentUser?.name || ''}">
-            <button type="submit" class="btn-orange w-full">Demander le retrait</button>
-          </form>
-          <p class="text-xs text-gray-500 text-center mt-3">⏱️ Traitement sous 24-48h ouvrées</p>
+        <h1 class="text-xl font-bold mb-4">💰 Retraits PayDunya</h1>
+        
+        <!-- Résumé financier -->
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4 text-center">
+            <p class="text-xs opacity-80">Solde Disponible</p>
+            <p class="text-2xl font-bold">${userEarnings.toLocaleString()} FCFA</p>
+          </div>
+          <div class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-4 text-center">
+            <p class="text-xs opacity-80">Total Retiré</p>
+            <p class="text-2xl font-bold">${totalWithdrawn.toLocaleString()} FCFA</p>
+          </div>
         </div>
+
+        <!-- Total gains cumulés -->
+        <div class="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl p-4 mb-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="text-sm opacity-90">📈 Total Gains Cumulés</p>
+              <p class="text-xs opacity-75">Historique complet (ne diminue jamais)</p>
+            </div>
+            <p class="text-2xl font-bold">${(state.currentUser?.totalEarnings || userEarnings).toLocaleString()} FCFA</p>
+          </div>
+        </div>
+
+        <!-- Formulaire de retrait -->
+        <div class="card mb-4">
+          <h2 class="font-bold mb-4">📤 Demander un retrait</h2>
+          
+          ${!canWithdraw ? `
+            <div class="bg-red-50 border-2 border-red-200 rounded-xl p-4 text-center mb-4">
+              <p class="text-red-600 font-bold text-lg">⚠️ Solde insuffisant</p>
+              <p class="text-red-500 text-sm mt-1">Minimum requis : <strong>8 000 FCFA</strong></p>
+              <p class="text-gray-500 text-xs mt-2">Continuez à compléter des tâches et inviter des amis!</p>
+              <div class="flex gap-2 justify-center mt-3">
+                <button onclick="navigate('tasks')" class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">📋 Tâches</button>
+                <button onclick="navigate('referrals')" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold">👥 Parrainer</button>
+              </div>
+            </div>
+          ` : `
+            <form id="withdrawForm">
+              <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p class="text-green-700 text-sm"><strong>✅ Vous pouvez retirer!</strong> Minimum : 8 000 FCFA</p>
+              </div>
+              
+              <label class="block text-sm font-medium text-gray-700 mb-2">Montant à retirer</label>
+              <input type="number" id="withdrawAmount" class="input" placeholder="Montant (min 8 000)" min="8000" max="${userEarnings}" required>
+              
+              <label class="block text-sm font-medium text-gray-700 mb-2">Numéro Mobile Money</label>
+              <input type="tel" id="withdrawPhone" class="input" placeholder="+225 XX XX XX XX XX" required>
+              
+              <label class="block text-sm font-medium text-gray-700 mb-2">Opérateur</label>
+              <select id="withdrawOperator" class="input">
+                <option value="orange">Orange Money</option>
+                <option value="mtn">MTN MoMo</option>
+                <option value="moov">Moov Money</option>
+                <option value="wave">Wave</option>
+              </select>
+              
+              <button type="submit" class="btn-orange w-full mt-4 py-3 text-lg font-bold">
+                🏦 Demander le retrait
+              </button>
+            </form>
+          `}
+          
+          <p class="text-xs text-gray-500 text-center mt-4">⏱️ Traitement sous 24-48h ouvrées via PayDunya</p>
+        </div>
+
+        <!-- Historique -->
         <div class="card">
-          <h2 class="font-bold mb-3">📜 Historique</h2>
-          ${state.withdrawals.length === 0 ? '<p class="text-gray-500 text-sm text-center py-4">Aucun retrait</p>' : `
+          <h2 class="font-bold mb-3">📜 Historique des retraits</h2>
+          ${state.withdrawals?.length === 0 ? '<p class="text-gray-500 text-sm text-center py-4">Aucun retrait effectué</p>' : `
             <div class="space-y-2">
-              ${state.withdrawals.map(w => `
+              ${state.withdrawals?.map(w => `
                 <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                  <div><p class="font-semibold">${w.amount} FCFA</p><p class="text-xs text-gray-500">${w.method === 'moov' ? 'Moov Money' : 'Mix by Yas'} • ${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p></div>
+                  <div>
+                    <p class="font-semibold">${w.amount?.toLocaleString()} FCFA</p>
+                    <p class="text-xs text-gray-500">Mobile Money • ${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p>
+                  </div>
                   <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(w.status)}">${getStatusLabel(w.status)}</span>
                 </div>
-              `).join('')}
+              `).join('') || ''}
             </div>
           `}
         </div>
       </div>
     </div>
-  `,
+  `},
 
   admin: () => `
     <div class="min-h-screen bg-gray-100">

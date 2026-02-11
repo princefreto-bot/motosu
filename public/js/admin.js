@@ -87,7 +87,7 @@ function renderAdminWithdrawals() {
   if (!state.adminData.withdrawals.length) return '<div class="card text-center text-gray-500 py-8">Aucune demande</div>';
   return state.adminData.withdrawals.map(w => `
     <div class="card mb-3"><div class="flex flex-col sm:flex-row sm:justify-between gap-3">
-      <div><p class="font-bold text-xl text-orange-600">${w.amount} FCFA</p><p class="font-semibold">${w.userName}</p><p class="text-sm text-gray-500">${w.method==='moov'?'Moov Money':'Mix by Yas'}</p><p class="text-sm text-gray-600">📱 ${w.accountNumber}</p><p class="text-sm text-gray-500">Nom: ${w.accountName}</p><p class="text-xs text-gray-400">${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p></div>
+      <div><p class="font-bold text-xl text-orange-600">${w.amount?.toLocaleString()} FCFA</p><p class="font-semibold">${w.userName}</p><p class="text-sm text-gray-500">📱 Mobile Money (PayDunya)</p><p class="text-sm text-gray-600">Tel: ${w.accountNumber}</p><p class="text-sm text-gray-500">Opérateur: ${w.accountName || 'N/A'}</p><p class="text-xs text-gray-400">${new Date(w.createdAt).toLocaleDateString('fr-FR')}</p></div>
       <div class="flex flex-col gap-2 items-end">
         <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(w.status)}">${getStatusLabel(w.status)}</span>
         ${w.status==='pending'?`<button onclick="approveWithdraw('${getId(w)}')" class="btn-success text-sm px-4 py-2">✓ Approuver</button><button onclick="rejectWithdraw('${getId(w)}')" class="btn-danger text-sm px-4 py-2">✗ Refuser</button>`:''}
@@ -174,22 +174,35 @@ function renderAdminTasks() {
 }
 
 function renderAdminConfig() {
-  const config = state.adminData.config;
   return `<div class="card">
-    <h2 class="font-bold text-lg mb-4">📱 Numéros de paiement</h2>
-    <div id="paymentNumbersList">
-      ${(config.paymentNumbers||[]).map((p,i)=>`
-        <div class="flex items-center gap-2 mb-3 p-3 bg-gray-50 rounded-lg">
-          <div class="flex-1 grid grid-cols-3 gap-2">
-            <input type="text" class="input mb-0 text-sm" value="${p.operator}" placeholder="Opérateur" id="op-${i}">
-            <input type="text" class="input mb-0 text-sm" value="${p.number}" placeholder="Numéro" id="num-${i}">
-            <input type="text" class="input mb-0 text-sm" value="${p.name}" placeholder="Nom" id="name-${i}">
-          </div>
-          <button onclick="removePaymentNumber(${i})" class="text-red-500 text-xl px-2">×</button>
-        </div>`).join('')}
+    <h2 class="font-bold text-lg mb-4">💳 Configuration Paiements</h2>
+    
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+      <h3 class="font-bold text-green-700 mb-2">✅ PayDunya Activé</h3>
+      <p class="text-sm text-gray-600">Tous les paiements et retraits sont gérés automatiquement via PayDunya.</p>
     </div>
-    <button onclick="addPaymentNumber()" class="text-blue-600 text-sm font-semibold mb-4">+ Ajouter</button>
-    <button onclick="savePaymentNumbers()" class="btn-primary w-full">Enregistrer</button>
+    
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+      <h3 class="font-bold text-blue-700 mb-2">📊 Paramètres actuels</h3>
+      <ul class="text-sm text-gray-700 space-y-2">
+        <li>• <strong>Activation compte :</strong> 4 000 FCFA (fixe)</li>
+        <li>• <strong>Minimum retrait :</strong> 8 000 FCFA</li>
+        <li>• <strong>Commission N1 :</strong> 2 000 FCFA</li>
+        <li>• <strong>Commission N2 :</strong> 800 FCFA</li>
+        <li>• <strong>Commission N3 :</strong> 400 FCFA</li>
+      </ul>
+    </div>
+    
+    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+      <h3 class="font-bold text-orange-700 mb-2">🔧 Variables d'environnement Render</h3>
+      <p class="text-xs text-gray-600 mb-2">Configurées dans Render Dashboard → Environment :</p>
+      <ul class="text-xs text-gray-600 space-y-1 font-mono">
+        <li>PAYDUNYA_API_KEY</li>
+        <li>PAYDUNYA_API_SECRET</li>
+        <li>PAYDUNYA_MASTER_KEY</li>
+        <li>PAYDUNYA_MODE=production</li>
+      </ul>
+    </div>
   </div>`;
 }
 
