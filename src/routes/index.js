@@ -14,6 +14,7 @@ const formationRoutes = require('./formationRoutes');
 const referralRoutes = require('./referralRoutes');
 const withdrawalRoutes = require('./withdrawalRoutes');
 const paymentRoutes = require('./paymentRoutes');
+const paydunyaRoutes = require('./paydunyaRoutes');
 const adminRoutes = require('./adminRoutes');
 const configRoutes = require('./configRoutes');
 
@@ -27,6 +28,7 @@ router.use('/referrals', referralRoutes);
 router.use('/withdraw', withdrawalRoutes);      // POST /api/withdraw
 router.use('/withdrawals', withdrawalRoutes);    // GET /api/withdrawals/user/:id
 router.use('/payment', paymentRoutes);
+router.use('/paydunya', paydunyaRoutes);         // POST /api/paydunya/ipn
 router.use('/admin', adminRoutes);
 router.use('/', configRoutes);
 

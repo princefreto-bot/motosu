@@ -80,7 +80,7 @@ const pages = {
             <li class="flex items-start gap-3 p-3 bg-green-50 rounded-lg"><span class="text-green-500 text-xl">✓</span><div><p class="font-semibold">Accès aux micro-tâches rémunérées</p><p class="text-sm text-gray-500">Sondages, vérifications, classifications...</p></div></li>
             <li class="flex items-start gap-3 p-3 bg-purple-50 rounded-lg"><span class="text-purple-500 text-xl">✓</span><div><p class="font-semibold">Vidéos à regarder = Argent gagné</p><p class="text-sm text-gray-500">YouTube et TikTok rémunérés</p></div></li>
             <li class="flex items-start gap-3 p-3 bg-blue-50 rounded-lg"><span class="text-blue-500 text-xl">✓</span><div><p class="font-semibold">Programme de parrainage 3 niveaux</p><p class="text-sm text-gray-500">2 000 FCFA (N1) + 800 FCFA (N2) + 400 FCFA (N3) par filleul</p></div></li>
-            <li class="flex items-start gap-3 p-3 bg-orange-50 rounded-lg"><span class="text-orange-500 text-xl">✓</span><div><p class="font-semibold">Retraits faciles</p><p class="text-sm text-gray-500">Moov Money et Mix by Yas dès 15 000 FCFA</p></div></li>
+            <li class="flex items-start gap-3 p-3 bg-orange-50 rounded-lg"><span class="text-orange-500 text-xl">✓</span><div><p class="font-semibold">Retraits faciles</p><p class="text-sm text-gray-500">Mobile Money via PayDunya dès 8 000 FCFA</p></div></li>
           </ul>
         </div>
         <div class="bg-blue-50 p-4 rounded-lg mb-6">
@@ -121,7 +121,7 @@ const pages = {
           <div><h3 class="font-bold text-gray-800 mb-2">1. Objet</h3><p>Les présentes CGU régissent l'accès et l'utilisation de la plateforme Motosu Agencies. En vous inscrivant, vous acceptez sans réserve l'intégralité de ces conditions.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">2. Inscription et Compte</h3><p>L'inscription est ouverte à toute personne majeure. Vous devez fournir des informations exactes. Un frais d'activation unique de 4 000 FCFA est requis pour accéder aux fonctionnalités premium.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">3. Services Proposés</h3><p>Micro-tâches rémunérées (sondages, vérifications, classifications, transcriptions), programme de parrainage à 3 niveaux, visionnage de vidéos rémunéré, et formations gratuites.</p></div>
-          <div><h3 class="font-bold text-gray-800 mb-2">4. Rémunération et Retraits</h3><p>Gains crédités après validation. Retraits possibles à partir de 15 000 FCFA via Moov Money ou Mix by Yas. Traitement sous 24 à 48 heures ouvrées.</p></div>
+          <div><h3 class="font-bold text-gray-800 mb-2">4. Rémunération et Retraits</h3><p>Gains crédités après validation. Retraits possibles à partir de 8 000 FCFA via Mobile Money (PayDunya). Traitement sous 24 à 48 heures ouvrées.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">5. Programme de Parrainage</h3><p>Code unique par utilisateur. Niveau 1 : 2 000 FCFA, Niveau 2 : 800 FCFA, Niveau 3 : 400 FCFA. Commissions versées après validation du filleul.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">6. Responsabilités</h3><p>Tout comportement abusif (multi-comptes, triche, spam) entraînera la suspension immédiate sans remboursement.</p></div>
           <div><h3 class="font-bold text-gray-800 mb-2">7. Modification</h3><p>Motosu Agencies se réserve le droit de modifier ces CGU. Les utilisateurs seront informés par notification.</p></div>
@@ -228,28 +228,20 @@ const pages = {
         <div class="text-center mb-6">
           <div class="flex justify-center mb-4">${renderLogo('lg')}</div>
           <h1 class="text-xl font-bold text-orange-600">Compte de recharge - Compte inactif</h1>
-          <p class="text-gray-600 mt-2">Veuillez vous abonner. Utilisez le numéro <strong>${state.currentUser?.phone || ''}</strong> pour le dépôt.</p>
+          <p class="text-gray-600 mt-2">Veuillez vous abonner pour activer votre compte.</p>
         </div>
         <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg mb-4">
           <p class="font-bold text-orange-800 text-center text-lg">${state.config.subscriptionAmount || 4000} FCFA</p>
+          <p class="text-xs text-orange-700 text-center mt-1">Paiement sécurisé via PayDunya</p>
         </div>
-        <div class="mb-6">
-          <h3 class="font-bold mb-3">📱 Numéros de paiement :</h3>
-          <div class="space-y-2">
-            ${(state.config.paymentNumbers || []).map(p => `
-              <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div><p class="font-semibold">${p.operator}</p><p class="text-sm text-gray-500">${p.name}</p></div>
-                <div class="text-right"><p class="font-mono font-bold text-blue-600">${p.number}</p><button onclick="copyNumber('${p.number}')" class="text-xs text-blue-500">📋 Copier</button></div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
+
+        <button onclick="payWithPayDunya()" class="btn-orange w-full mb-3">🔒 Payer et activer mon compte</button>
+
         <div class="bg-blue-50 p-4 rounded-lg mb-6">
-          <h3 class="font-bold text-blue-600 mb-2">📝 Après votre paiement :</h3>
-          <p class="text-sm text-gray-700">Envoyez une capture d'écran de la confirmation de paiement pour activer votre compte.</p>
+          <h3 class="font-bold text-blue-600 mb-2">ℹ️ Info</h3>
+          <p class="text-sm text-gray-700">Après paiement, votre compte sera activé automatiquement.</p>
         </div>
-        <button onclick="openPaymentProof()" class="btn-orange w-full mb-3">📤 Envoyer ma preuve de paiement</button>
-        ${state.currentUser?.status === 'pending_payment' ? `<div class="bg-green-50 border border-green-200 p-3 rounded-lg text-center mb-3"><p class="text-green-700 text-sm">✓ Preuve envoyée - En attente de validation</p></div>` : ''}
+
         <button onclick="logout()" class="w-full text-red-500 py-2">Déconnexion</button>
       </div>
     </div>

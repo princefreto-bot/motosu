@@ -1,117 +1,95 @@
 /**
- * Routes de paiement - SYSTÈME PAYPLUS EXCLUSIF
+ * Routes de paiement — PAYDUNYA UNIQUEMENT
+ * - POST /api/payment/init
+ * - GET /api/payment/return
+ * - GET /api/payment/cancel
  */
 
 const express = require('express');
 const router = express.Router();
+
 const Payment = require('../models/Payment');
 const User = require('../models/User');
-const { initPayment, verifyTransaction } = require('../services/payPlusService');
+const { createInvoice, confirmInvoice } = require('../services/paydunyaService');
 const { distributeCommissions } = require('../services/referralService');
 const { SUBSCRIPTION_AMOUNT } = require('../config/constants');
 
-// POST /api/payment/init - Initier un paiement PayPlus
+const APP_URL = process.env.APP_URL || 'https://motosu.onrender.com';
+
+// POST /api/payment/init — Create PayDunya invoice
 router.post('/init', async (req, res) => {
   try {
     const { userId } = req.body;
-    const user = await User.findById(userId);
+    if (!userId) return res.status(400).json({ error: 'UserId requis' });
 
+    const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
-    // Initialiser PayPlus
-    const result = await initPayment(user, SUBSCRIPTION_AMOUNT);
+    const result = await createInvoice({
+      amount: SUBSCRIPTION_AMOUNT,
+      description: `Activation Motosu - ${user.name}`,
+      customer: { name: user.name, phone: user.phone, email: user.email },
+      returnUrl: `${APP_URL}/api/payment/return`,
+      cancelUrl: `${APP_URL}/api/payment/cancel`,
+      ipnUrl: `${APP_URL}/api/paydunya/ipn`,
+      customData: { userId: String(user._id) }
+    });
 
     if (!result.success) {
-      return res.status(400).json({ error: result.error });
+      console.error('PayDunya init error:', result.raw || result.error);
+      return res.status(400).json({ error: 'Erreur initialisation PayDunya' });
     }
 
-    // Créer un paiement en attente
+    // Save payment pending
     const payment = new Payment({
       userId: user._id,
       userName: user.name,
       userEmail: user.email,
       userPhone: user.phone,
       amount: SUBSCRIPTION_AMOUNT,
-      transactionId: result.token || 'PENDING',
+      transactionId: result.token,
       status: 'pending'
     });
     await payment.save();
 
-    res.json({
-      success: true,
-      payment_url: result.payment_url
-    });
-
-  } catch (error) {
-    console.error('Erreur init paiement:', error.message);
-    res.status(500).json({ error: 'Erreur serveur' });
+    return res.json({ success: true, payment_url: result.payment_url, token: result.token });
+  } catch (err) {
+    console.error('Erreur init PayDunya:', err.message);
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
-// POST /api/payment/notify - Callback PayPlus
-router.post('/notify', async (req, res) => {
-  try {
-    const { token, command_status } = req.body; // Adapter selon payload réel PayPlus
-
-    console.log('PayPlus Callback:', req.body);
-
-    // Vérifier la transaction
-    // Note: Si PayPlus envoie le statut directement, on peut l'utiliser, 
-    // sinon on vérifie via API
-    
-    // Rechercher le paiement
-    // (Adapter la recherche selon ce que PayPlus renvoie comme ID unique)
-    // Ici on suppose que le token est renvoyé ou qu'on le retrouve via metadata
-    
-    // Exemple simplifié: on attend que le verify soit appelé ou on fait la logique ici.
-    // Pour la sécurité, on va toujours vérifier via l'API si possible.
-    
-    res.json({ response_code: "00", response_text: "OK" });
-  } catch (error) {
-    console.error('Callback Error:', error.message);
-    res.status(500).json({ error: 'Error' });
-  }
-});
-
-// GET /api/payment/return - Retour succès
+// GET /api/payment/return — User came back after payment
 router.get('/return', async (req, res) => {
-  // Ici on peut vérifier le statut si le token est dans l'URL
-  // PayPlus renvoie souvent ?token=...
-  const { token } = req.query;
-
+  const token = req.query?.token;
   if (token) {
     try {
-      const statusData = await verifyTransaction(token);
-      
-      // Logique de validation si succès
-      if (statusData && statusData.response_code === '00') {
-         // Trouver le paiement associé au token
-         const payment = await Payment.findOne({ transactionId: token });
-         
-         if (payment && payment.status === 'pending') {
-            payment.status = 'validated';
-            await payment.save();
-            
-            const user = await User.findById(payment.userId);
-            if (user && user.status !== 'validated') {
-              user.status = 'validated';
-              user.subscriptionDate = new Date();
-              await user.save();
-              await distributeCommissions(user);
-            }
-         }
+      const confirm = await confirmInvoice(token);
+      if (confirm.success) {
+        const payment = await Payment.findOne({ transactionId: token });
+        if (payment && payment.status === 'pending') {
+          payment.status = 'validated';
+          await payment.save();
+
+          const user = await User.findById(payment.userId);
+          if (user && user.status !== 'validated') {
+            user.status = 'validated';
+            user.subscriptionDate = new Date();
+            await user.save();
+            await distributeCommissions(user);
+          }
+        }
       }
     } catch (e) {
-      console.error('Verif error on return:', e);
+      console.error('PayDunya return confirm error:', e.message);
     }
   }
-
-  res.redirect('/');
+  return res.redirect('/');
 });
 
-// GET /api/payment/cancel - Annulation
+// GET /api/payment/cancel — Cancel page
 router.get('/cancel', (req, res) => {
-  res.redirect('/');
+  return res.redirect('/');
 });
 
 module.exports = router;

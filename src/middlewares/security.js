@@ -65,7 +65,7 @@ const antiScraping = (req, res, next) => {
   );
   
   // Exclure les webhooks et les health checks
-  const isExcluded = req.path.includes('/api/payment/notify') || 
+  const isExcluded = req.path.includes('/api/paydunya/ipn') ||
                      req.path.includes('/api/health') ||
                      req.path.includes('/api/payment/return') ||
                      req.path.includes('/api/payment/cancel');
