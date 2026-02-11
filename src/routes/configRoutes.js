@@ -14,7 +14,6 @@ router.get('/config', async (req, res) => {
     const subscriptionAmount = await Config.findOne({ key: 'subscriptionAmount' });
 
     return res.json({
-      // Legacy field kept for frontend compatibility, but empty because manual payment removed
       paymentNumbers: [],
       subscriptionAmount: subscriptionAmount?.value || SUBSCRIPTION_AMOUNT,
       withdrawMethods: [

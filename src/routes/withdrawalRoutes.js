@@ -11,7 +11,7 @@ const Withdrawal = require('../models/Withdrawal');
 const User = require('../models/User');
 const { WITHDRAWAL } = require('../config/constants');
 
-// POST /api/withdraw — Demander un retrait
+// POST /api/withdraw — Demander un retrait (PayDunya ONLY)
 router.post('/', async (req, res) => {
   try {
     const { userId, amount, phoneNumber, operator } = req.body;
@@ -20,8 +20,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Données incomplètes' });
     }
 
-    if (Number(amount) < WITHDRAWAL.MINIMUM) {
-      // Required message
+    if (Number(amount) < 8000) {
       return res.status(400).json({ error: 'Minimum withdrawal is 8000' });
     }
 

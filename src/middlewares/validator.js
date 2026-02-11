@@ -62,12 +62,12 @@ const loginRules = [
     .isLength({ max: 128 }).withMessage('Mot de passe trop long')
 ];
 
-// Règles de validation pour le retrait
+// Règles de validation pour le retrait (PayDunya uniquement)
 const withdrawRules = [
   body('amount')
-    .isInt({ min: 15000 }).withMessage('Montant minimum 15000 FCFA'),
+    .isInt({ min: 8000 }).withMessage('Minimum withdrawal is 8000'),
   body('method')
-    .isIn(['moov', 'mix']).withMessage('Méthode invalide'),
+    .isIn(['mobile_money']).withMessage('Méthode invalide'),
   body('accountNumber')
     .trim()
     .notEmpty().withMessage('Numéro de compte requis')
